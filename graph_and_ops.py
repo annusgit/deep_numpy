@@ -50,8 +50,9 @@ class GRAPH(object):
         """
 
         for step in self.forward_feed_order:
-            step.compute()
-        pass
+            out = step.compute()
+
+        return out
 
 
 
@@ -127,6 +128,8 @@ class Matrix(Operation):
     def compute(self):
         # no need to return anything, just assign the value to the output
         self.output = self.matrix
+
+
 
 
 
