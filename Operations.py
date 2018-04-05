@@ -12,7 +12,6 @@ import numpy as np
 
 
 
-
 class add(Operation):
 
     """
@@ -25,12 +24,12 @@ class add(Operation):
         pass
 
 
-    def compute(self, A, B):
+    def compute(self):
+
         # A and B are two actual matrices that we want to add
-
-        return
-
-
+        input_matrices = [node.output for node in self.prev_nodes]
+        # print(type(input_matrices[0]), type(input_matrices[1]))
+        self.output = np.add(input_matrices[0], input_matrices[1])
 
 
 
