@@ -44,14 +44,21 @@ class GRAPH(object):
                 print('\t {}'.format(step))
 
 
-    def run(self):
+    def run(self, input_matrices):
+
         """
             this is our feed forward implementation
         """
+        # input_matrices will be a dictionary containing inputs to out network
+        # let's assign the placeholders their values
+        for placeholder in input_matrices.keys():
+            placeholder.input_ = input_matrices[placeholder]
 
+        # this is the feedforward loop,
         for step in self.forward_feed_order:
             out = step.compute()
 
+        # returns the final output
         return out
 
 
@@ -98,19 +105,21 @@ class placeholder(Operation):
         # add it to the default graph
         default_graph.placeholders.append(self)
 
+        # they need some input
+        self.input_ = None
         pass
 
 
     def compute(self):
-
-        pass
+        # just pass on whatever value you get
+        self.output = self.input_
 
 
 
 class Matrix(Operation):
 
     """
-        our input placeholder definition; will be treated as another operation
+        our Matrix definition; will be treated as another operation
     """
 
     def __init__(self, initial_value):

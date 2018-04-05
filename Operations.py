@@ -38,7 +38,7 @@ class add(Operation):
 class dot(Operation):
 
     """
-        our add operation; will be treated as another operation
+        our dot operation; will be treated as another operation; yet to be defined
     """
 
     def __init__(self, *input_nodes):
@@ -52,7 +52,7 @@ class dot(Operation):
         # A and B are two actual matrices that we want to add
         input_matrices = [node.output for node in self.prev_nodes]
         # print(type(input_matrices[0]), type(input_matrices[1]))
-        self.output = np.dot(input_matrices[0], input_matrices[1])
+        self.output = np.dot(input_matrices[0].transpose(), input_matrices[1])
 
         return self.output
 
