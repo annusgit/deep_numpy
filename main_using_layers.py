@@ -18,6 +18,7 @@ from graph_and_ops import GRAPH
 from Operations import placeholder
 from layers import Dense, Relu, Softmax
 from utils import Data
+from loss_functions import CrossEntropyLoss
 
 
 def main():
@@ -54,8 +55,7 @@ def main():
     # declare your placeholders, to provide your inputs
     # print(int(train_batch_examples.shape[1]))
     input_features = placeholder(shape=(train_batch_size, int(train_batch_examples.shape[1])))
-    # input_labels = placeholder(shape=(train_batch_size, 2))
-
+    input_labels = placeholder(shape=(train_batch_size))
 
 
     """
@@ -75,11 +75,12 @@ def main():
     features = Relu(features)
     features = Dense(features=features, units=2)
     logits = Softmax(features)
+    loss = CrossEntropyLoss(softmax_logits=logits, labels=input_labels)
 
     # compile and run
-    graph.graph_compile(function=logits, verbose=True)
-    output = graph.run(input_matrices={input_features: train_batch_examples})
-    print(output.shape)
+    graph.graph_compile(function=loss, verbose=True)
+    loss = graph.run(input_matrices={input_features: train_batch_examples, input_labels: train_batch_labels})
+    print(loss, logits.output.shape)
 
 pass
 

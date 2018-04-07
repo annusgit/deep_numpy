@@ -25,10 +25,11 @@ class Dense(Layer):
         # initialize its ops
         # print(features.shape)
         self.W = np.random.uniform(low=-0.1,high=0.1,size=(features.shape[1],units))
-        self.bias = np.random.uniform(low=-0.1,high=0.1,size=units)
+        self.bias = np.ones(shape=units)
 
         # this will be our connection to the network
-        self.shape = (features.shape[1], units)
+        # this is the shape of the matrix that will come at the output!!!
+        self.shape = (features.shape[0], units)
 
 
     def compute(self):
@@ -126,6 +127,33 @@ class Softmax(Layer):
         return self.output
 
 
+class Softmax(Layer):
+
+    """
+        our softmax squashing operation to convert numbers in real probabilities
+    """
+
+    def __init__(self, *input_nodes):
+
+        super(Softmax, self).__init__(input_nodes)
+
+        # we might need their shapes at some point
+        self.shape = input_nodes[0].shape
+        pass
+
+
+    def compute(self):
+
+        # input_matrix is the computation of the last layer before softmax
+        # print(len(self.prev_nodes))
+        input_matrix = self.prev_nodes[0].output
+
+        # exp sum
+        exps = np.exp(input_matrix)
+        # print(exps.shape)
+        self.output = exps / np.sum(exps, axis=1)[:,None]
+        # print(self.output.shape)
+        return self.output
 
 
 

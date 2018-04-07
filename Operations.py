@@ -9,7 +9,8 @@
 from __future__ import division
 from graph_and_ops import*
 import numpy as np
-
+import time
+np.random.seed(int(time.time()))
 
 
 class add(Operation):
@@ -53,7 +54,7 @@ class dot(Operation):
 
         # we might need their shapes at some point
         # print(input_nodes[0].shape, input_nodes[1].shape)
-        self.shape = (input_nodes[0].shape[1], input_nodes[1].shape[1])
+        self.shape = (input_nodes[0].shape[0], input_nodes[1].shape[1])
         pass
 
 

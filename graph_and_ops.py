@@ -33,12 +33,14 @@ class GRAPH(object):
     def graph_compile(self, function, verbose=False):
         """
             get a post-order of the graph for feed forward, needs a function to target for feed-forward
+            or as many functions as you want
         :return: None
                  Simply makes the graph ready to work!!!
 
         """
 
         # self.forward_feed_order stores the list that will be used to propagate forward through a Graph object
+        # for func in functions:
         self.forward_feed_order = get_ordered_list(thisNode=function, _class=Operation)
 
         if verbose:

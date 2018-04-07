@@ -8,9 +8,9 @@ from __future__ import print_function
 from __future__ import division
 
 # from graph_and_ops import GRAPH
-from Operations import*
-from layers import Dense
 from utils import Data
+from Operations import*
+from loss_functions import CrossEntropyLoss
 
 
 def main():
@@ -47,8 +47,7 @@ def main():
     # declare your placeholders, to provide your inputs
     # print(int(train_batch_examples.shape[1]))
     input_features = placeholder(shape=(train_batch_size, int(train_batch_examples.shape[1])))
-    # input_labels = placeholder(shape=(train_batch_size, 2))
-
+    input_labels = placeholder(shape=(train_batch_size))
 
 
 
@@ -66,7 +65,7 @@ def main():
     # declare all the weight and biases
     for units in hidden_units:
         all_weights.append(Matrix(initial_value=np.random.uniform(low=-0.1,high=0.1,size=(prev_units,units))))
-        all_biases.append(Matrix(initial_value=np.random.uniform(low=-0.1,high=0.1,size=(units))))
+        all_biases.append(Matrix(initial_value=np.ones(shape=units)))
         prev_units = units
 
 
@@ -81,12 +80,15 @@ def main():
     # calculate the logits
     logits = softmax_classifier(features)
 
+    # and the loss
+    loss = CrossEntropyLoss(softmax_logits=logits, labels=input_labels)
+
     # compile your graph
-    graph.graph_compile(function=logits, verbose=True)
+    graph.graph_compile(function=loss, verbose=True)
 
     # this is kind of sess.run()
-    output = graph.run(input_matrices={input_features: train_batch_examples})
-    print(output.shape)
+    loss = graph.run(input_matrices={input_features: train_batch_examples, input_labels: train_batch_labels})
+    print(loss, logits.output.shape)
 
 
 

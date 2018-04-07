@@ -469,7 +469,7 @@ def main():
     eval_size = int(num_examples/2)
     X, y = manager.create_data_set(num_of_examples=num_examples, max_val=max_val,
                                    discriminator=lambda x: max_val*(1/(1+np.exp(-x)) + 1/(1+np.exp(x**2)))-max_val/2,
-                                   one_hot=False, plot_data=True, load_saved_data=False, filename='dataset.npy')
+                                   one_hot=False, plot_data=True, load_saved_data=True, filename='dataset.npy')
 
     # examples_batch = X[:batch_size,:]
     # labels_batch = y[:batch_size]
