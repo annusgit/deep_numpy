@@ -68,6 +68,60 @@ class dot(Operation):
 
 
 
+class sigmoid(Operation):
+
+    """
+        our sigmoid operation; will be treated as another operation; yet to be defined
+    """
+
+    def __init__(self, *input_nodes):
+
+        # print('inside init')
+        super(sigmoid, self).__init__(input_nodes)
+
+        # we might need their shapes at some point
+        # print(input_nodes[0].shape, input_nodes[1].shape)
+        self.shape = input_nodes[0].shape
+        pass
+
+
+    def compute(self):
+
+        # A and B are two actual matrices that we want to add
+        x = self.prev_nodes[0].output
+        # print(type(input_matrices[0]), type(input_matrices[1]))
+        self.output = 1 / (1 + np.exp(x))
+
+        return self.output
+
+
+class relu(Operation):
+
+    """
+        our Relu operation; will be treated as another layer; yet to be defined
+    """
+
+    def __init__(self, *input_nodes):
+
+        # print('inside init')
+        super(relu, self).__init__(input_nodes)
+
+        # we might need their shapes at some point
+        # print(input_nodes[0].shape, input_nodes[1].shape)
+        self.shape = input_nodes[0].shape
+        pass
+
+
+    def compute(self):
+
+        # A and B are two actual matrices that we want to add
+        x = self.prev_nodes[0].output
+        # print(type(input_matrices[0]), type(input_matrices[1]))
+        self.output = x * (x > 0)
+
+        return self.output
+
+
 class softmax_classifier(Operation):
 
     """

@@ -13,8 +13,10 @@ from __future__ import print_function
 from __future__ import division
 
 # from graph_and_ops import GRAPH
-from Operations import*
-from layers import Dense
+import numpy as np
+from graph_and_ops import GRAPH
+from Operations import placeholder
+from layers import Dense, Relu, Softmax
 from utils import Data
 
 
@@ -62,12 +64,17 @@ def main():
 
     # this is defined using layers
     features = Dense(features=input_features, units=32)
+    features = Relu(features)
     features = Dense(features=features, units=64)
+    features = Relu(features)
     features = Dense(features=features, units=128)
+    features = Relu(features)
     features = Dense(features=features, units=64)
+    features = Relu(features)
     features = Dense(features=features, units=32)
+    features = Relu(features)
     features = Dense(features=features, units=2)
-    logits = softmax_classifier(features)
+    logits = Softmax(features)
 
     # compile and run
     graph.graph_compile(function=logits, verbose=True)

@@ -71,15 +71,20 @@ def main():
 
     # calculate some features
     features = add(dot(input_features,weights1),bias1)
+    features = relu(features)
     features = add(dot(features, weights2), bias2)
+    features = relu(features)
     features = add(dot(features, weights3), bias3)
+    features = relu(features)
     features = add(dot(features, weights4), bias4)
+    features = relu(features)
     features = add(dot(features, weights5), bias5)
+    features = relu(features)
     features = add(dot(features, weights6), bias6)
     logits = softmax_classifier(features)
 
     # compile and run
-    graph.graph_compile(function=logits)
+    graph.graph_compile(function=logits, verbose=True)
     output = graph.run(input_matrices={input_features: train_batch_examples})
     print(output.shape)
 
