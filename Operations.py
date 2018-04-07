@@ -20,7 +20,11 @@ class add(Operation):
 
     def __init__(self, *input_nodes):
 
+        # print('inside init')
         super(add, self).__init__(input_nodes)
+
+        # we might need their shapes at some point
+        self.shape = input_nodes[0].shape
         pass
 
 
@@ -28,6 +32,7 @@ class add(Operation):
 
         # A and B are two actual matrices that we want to add
         input_matrices = [node.output for node in self.prev_nodes]
+        # print(input_matrices[0])
         # print(type(input_matrices[0]), type(input_matrices[1]))
         self.output = np.add(input_matrices[0], input_matrices[1])
 
@@ -43,7 +48,12 @@ class dot(Operation):
 
     def __init__(self, *input_nodes):
 
+        # print('inside init')
         super(dot, self).__init__(input_nodes)
+
+        # we might need their shapes at some point
+        # print(input_nodes[0].shape, input_nodes[1].shape)
+        self.shape = (input_nodes[0].shape[1], input_nodes[1].shape[1])
         pass
 
 
@@ -67,6 +77,9 @@ class softmax_classifier(Operation):
     def __init__(self, *input_nodes):
 
         super(softmax_classifier, self).__init__(input_nodes)
+
+        # we might need their shapes at some point
+        self.shape = input_nodes[0].shape
         pass
 
 

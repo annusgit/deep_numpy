@@ -50,6 +50,10 @@ def main():
     # input_labels = placeholder(shape=(train_batch_size, 2))
 
 
+    """
+        Method #1
+    """
+
     # declare all the weights and biases
     weights1 = Matrix(initial_value=np.random.uniform(low=-0.1,high=0.1,size=(2,32)))
     bias1 = Matrix(initial_value=np.random.uniform(low=-0.1,high=0.1,size=(32)))
@@ -79,22 +83,11 @@ def main():
     logits = softmax_classifier(features)
 
     # compile and run
-    graph.graph_compile(function=logits)
+    graph.graph_compile(function=logits, verbose=True)
     output = graph.run(input_matrices={input_features: train_batch_examples})
     print(output.shape)
-
-
-    pass
-
 
 
 if __name__ == '__main__':
 
     main()
-
-
-
-
-
-
-

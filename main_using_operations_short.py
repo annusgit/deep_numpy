@@ -50,51 +50,46 @@ def main():
     # input_labels = placeholder(shape=(train_batch_size, 2))
 
 
-    # declare all the weights and biases
-    weights1 = Matrix(initial_value=np.random.uniform(low=-0.1,high=0.1,size=(2,32)))
-    bias1 = Matrix(initial_value=np.random.uniform(low=-0.1,high=0.1,size=(32)))
 
-    weights2 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(32, 64)))
-    bias2 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(64)))
 
-    weights3 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(64, 128)))
-    bias3 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(128)))
+    """
+        Method #2
+    """
 
-    weights4 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(128, 64)))
-    bias4 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(64)))
+    # define a small network
+    hidden_units = [32, 64, 128, 256, 128, 64, 32, 2]
 
-    weights5 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(64, 32)))
-    bias5 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(32)))
+    all_weights, all_biases = [], []
+    prev_units = train_batch_examples[0,:].shape[0] # this is the number of features in the inputs
+    # print(prev_units)
 
-    weights6 = Matrix(initial_value=np.random.uniform(low=-0.1,high=0.1,size=(32,2)))
-    bias6 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(2)))
+    # declare all the weight and biases
+    for units in hidden_units:
+        all_weights.append(Matrix(initial_value=np.random.uniform(low=-0.1,high=0.1,size=(prev_units,units))))
+        all_biases.append(Matrix(initial_value=np.random.uniform(low=-0.1,high=0.1,size=(units))))
+        prev_units = units
 
-    # calculate some features
-    features = add(dot(input_features,weights1),bias1)
-    features = add(dot(features, weights2), bias2)
-    features = add(dot(features, weights3), bias3)
-    features = add(dot(features, weights4), bias4)
-    features = add(dot(features, weights5), bias5)
-    features = add(dot(features, weights6), bias6)
+
+    # for weights in all_weights:
+    #     print(weights.matrix.shape)
+
+    # calculate the features
+    features = input_features
+    for weights, bias in zip(all_weights, all_biases):
+        features = add(dot(features, weights), bias)
+
+    # calculate the logits
     logits = softmax_classifier(features)
 
-    # compile and run
-    graph.graph_compile(function=logits)
+    # compile your graph
+    graph.graph_compile(function=logits, verbose=True)
+
+    # this is kind of sess.run()
     output = graph.run(input_matrices={input_features: train_batch_examples})
     print(output.shape)
-
-
-    pass
 
 
 
 if __name__ == '__main__':
 
     main()
-
-
-
-
-
-
-

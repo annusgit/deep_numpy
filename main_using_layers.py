@@ -1,5 +1,10 @@
 
 
+
+
+
+
+
 """
     A small main script to see how our library works
 """
@@ -50,51 +55,27 @@ def main():
     # input_labels = placeholder(shape=(train_batch_size, 2))
 
 
-    # declare all the weights and biases
-    weights1 = Matrix(initial_value=np.random.uniform(low=-0.1,high=0.1,size=(2,32)))
-    bias1 = Matrix(initial_value=np.random.uniform(low=-0.1,high=0.1,size=(32)))
 
-    weights2 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(32, 64)))
-    bias2 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(64)))
+    """
+        Method #3
+    """
 
-    weights3 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(64, 128)))
-    bias3 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(128)))
-
-    weights4 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(128, 64)))
-    bias4 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(64)))
-
-    weights5 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(64, 32)))
-    bias5 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(32)))
-
-    weights6 = Matrix(initial_value=np.random.uniform(low=-0.1,high=0.1,size=(32,2)))
-    bias6 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(2)))
-
-    # calculate some features
-    features = add(dot(input_features,weights1),bias1)
-    features = add(dot(features, weights2), bias2)
-    features = add(dot(features, weights3), bias3)
-    features = add(dot(features, weights4), bias4)
-    features = add(dot(features, weights5), bias5)
-    features = add(dot(features, weights6), bias6)
+    # this is defined using layers
+    features = Dense(features=input_features, units=32)
+    features = Dense(features=features, units=64)
+    features = Dense(features=features, units=128)
+    features = Dense(features=features, units=64)
+    features = Dense(features=features, units=32)
+    features = Dense(features=features, units=2)
     logits = softmax_classifier(features)
 
     # compile and run
-    graph.graph_compile(function=logits)
+    graph.graph_compile(function=logits, verbose=True)
     output = graph.run(input_matrices={input_features: train_batch_examples})
     print(output.shape)
 
-
-    pass
-
+pass
 
 
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     main()
-
-
-
-
-
-
-

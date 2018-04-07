@@ -39,7 +39,9 @@ def get_ordered_list(thisNode, _class):
 
     def postorder(node):
         # if isinstance(node, _class):
+        # print(type(node))
         for prev_node in node.prev_nodes:
+            # print(type(node))
             postorder(prev_node)
         postorderedlist.add(node)
 

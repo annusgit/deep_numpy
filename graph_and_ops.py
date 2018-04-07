@@ -16,6 +16,7 @@ class GRAPH(object):
         self.placeholders = []
         self.Matrices = []
         self.operations = []
+        self.layers = []
         pass
 
 
@@ -41,9 +42,10 @@ class GRAPH(object):
         self.forward_feed_order = get_ordered_list(thisNode=function, _class=Operation)
 
         if verbose:
+            # print(self.operations)
             print('log: a very crude Summary of your graph...')
             for step in self.forward_feed_order:
-                print('\t {}'.format(step))
+                print('\t {} shape = {}'.format(step, step.shape))
 
 
     def run(self, input_matrices):
@@ -60,6 +62,7 @@ class GRAPH(object):
         # go through each node (step) and do them in the right order
         for step in self.forward_feed_order:
             out = step.compute()
+            # print(out.shape)
 
         # return the final output
         return out
@@ -108,11 +111,16 @@ class Operation(object):
         for prev_node in self.prev_nodes:
             prev_node.next_nodes.append(self)
 
+
+        # add to the graph
+        default_graph.operations.append(self)
+
         # these will be our own next nodes
         self.next_nodes = []
 
         # and this will be the output of each operation, single matrix at most!!!
         self.output = None
+
         pass
 
 
@@ -126,13 +134,52 @@ class Operation(object):
 
 
 
+# this will look just like the Operations class
+class Layer(object):
+
+    """
+        this class will contain a very basic parent class for all the layers
+    """
+
+    def __init__(self, inputs):
+        " this function will be called when we are defining the graph"
+        self.prev_nodes = inputs
+
+        # tell the inputs that we are going to "consume" them!!!
+        for prev_node in self.prev_nodes:
+            prev_node.next_nodes.append(self)
+
+        # add to the graph
+        default_graph.layers.append(self)
+
+
+        # these will be our own next nodes
+        self.next_nodes = []
+
+        # and this will be the output of each operation, single matrix at most!!!
+        self.output = None
+
+        pass
+
+
+    @property
+    def compute(self):
+        """
+            the actual layers will override this method
+        :return:
+        """
+
+        pass
+
+
+
 class placeholder(Operation):
 
     """
         our input placeholder definition; will be treated as another operation
     """
 
-    def __init__(self):
+    def __init__(self, shape):
 
         super(placeholder, self).__init__([])
         # add it to the default graph
@@ -140,6 +187,9 @@ class placeholder(Operation):
 
         # they need some input
         self.input_ = None
+
+        # shape of the input
+        self.shape = shape
         pass
 
 
@@ -164,6 +214,7 @@ class Matrix(Operation):
         # this will store our actual matrix
         self.matrix = initial_value
 
+        self.shape = self.matrix.shape
         pass
 
 
