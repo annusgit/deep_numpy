@@ -18,7 +18,7 @@ def main():
     manager = Data()
     num_examples = 10**4
     max_val = 1
-    train_batch_size = 32
+    train_batch_size = 16
     train_size = int(num_examples/2)
     eval_size = int(num_examples/2)
     X, y = manager.create_data_set(num_of_examples=num_examples, max_val=max_val,
@@ -48,13 +48,49 @@ def main():
     input_labels = placeholder()
 
 
-    # start declaring variables
-    weights1 = Matrix(initial_value=np.random.uniform(low=-0.1,high=0.1,size=(2,128)))
-    weights2 = Matrix(initial_value=np.random.uniform(low=-0.1,high=0.1,size=(128)))
+    # define a small network
+    hidden_units = [32, 64, 128, 256, 128, 64, 32, 2]
+
+    all_weights, all_biases = [], []
+    prev_units = train_batch_examples[0,:].shape[0] # this is the number of features in the inputs
+    # print(prev_units)
+
+    # declare all the weight and biases
+    for units in hidden_units:
+        all_weights.append(Matrix(initial_value=np.random.uniform(low=-0.1,high=0.1,size=(prev_units,units))))
+        all_biases.append(Matrix(initial_value=np.random.uniform(low=-0.1,high=0.1,size=(units))))
+        prev_units = units
+
+
+    # for weights in all_weights:
+    #     print(weights.matrix.shape)
+
+
+    # weights1 = Matrix(initial_value=np.random.uniform(low=-0.1,high=0.1,size=(2,128)))
+    # bias1 = Matrix(initial_value=np.random.uniform(low=-0.1,high=0.1,size=(128)))
+    #
+    # weights2 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(128, 2)))
+    # bias2 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(2)))
+    #
+    # weights2 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(128, 2)))
+    # bias2 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(2)))
+    #
+    # weights2 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(128, 2)))
+    # bias2 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(2)))
+    #
+    # weights2 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(128, 2)))
+    # bias2 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(2)))
+
     # weights3 = Matrix(initial_value=np.random.uniform(low=-0.1,high=0.1,size=(100,100)))
 
     # calculate some features
-    features = add(dot(input_features,weights1),weights2)
+    # features = add(dot(input_features,weights1),bias1)
+    # features = add(dot(features, weights2), bias2)
+
+    # calculate the features
+    features = input_features
+    for weights, bias in zip(all_weights, all_biases):
+        features = add(dot(features, weights), bias)
 
     # calculate the logits
     logits = softmax_classifier(features)
@@ -66,6 +102,7 @@ def main():
     # this is kind of sess.run()
     output = graph.run(input_matrices={input_features: train_batch_examples})
     print(output.shape)
+
     # print(output.shape)
 
     # get the gradients and backpropagate

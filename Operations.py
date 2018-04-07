@@ -78,8 +78,9 @@ class softmax_classifier(Operation):
 
         # exp sum
         exps = np.exp(input_matrix)
+        # print(exps.shape)
         self.output = exps / np.sum(exps, axis=1)[:,None]
-
+        # print(self.output.shape)
         return self.output
 
 
