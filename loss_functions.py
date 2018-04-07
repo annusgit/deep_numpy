@@ -11,10 +11,10 @@ from __future__ import print_function
 from __future__ import division
 
 import numpy as np
-from graph_and_ops import Layer
+from graph_and_ops import Layer as Loss
 
 
-class CrossEntropyLoss(Layer):
+class CrossEntropyLoss(Loss):
     """
         Used in classification problems mainly, will need logits from softmax
         :return crossentropy loss function

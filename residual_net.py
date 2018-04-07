@@ -13,7 +13,7 @@ from __future__ import division
 import numpy as np
 from graph_and_ops import GRAPH
 from Operations import placeholder, add
-from layers import Dense, Relu, Softmax
+from layers import fully_connected, Relu, Softmax
 from utils import Data
 from loss_functions import CrossEntropyLoss
 
@@ -63,41 +63,41 @@ def main():
     """
 
     # this is defined using layers
-    layer1 = Dense(features=input_features, units=32)
+    layer1 = fully_connected(features=input_features, units=32)
     layer1 = Relu(layer1)
-    layer2 = Dense(features=layer1, units=64)
+    layer2 = fully_connected(features=layer1, units=64)
     layer2 = Relu(layer2)
-    layer2_1 = Dense(features=layer2, units=64)
+    layer2_1 = fully_connected(features=layer2, units=64)
     layer2_1 = Relu(layer2_1)
-    layer2_2 = Dense(features=layer2_1, units=64)
+    layer2_2 = fully_connected(features=layer2_1, units=64)
     layer2_2 = Relu(layer2_2)
 
     # a recurrent connection
     layer2_2 = add(layer2_2, layer2)
 
-    layer3 = Dense(features=layer2_2, units=128)
+    layer3 = fully_connected(features=layer2_2, units=128)
     layer3 = Relu(layer3)
-    layer4 = Dense(features=layer3, units=128)
+    layer4 = fully_connected(features=layer3, units=128)
     layer4 = Relu(layer4)
-    layer5 = Dense(features=layer4, units=128)
+    layer5 = fully_connected(features=layer4, units=128)
     layer5 = Relu(layer5)
 
     # a recurrent connection
     layer5 = add(layer5, layer3)
 
-    layer6 = Dense(features=layer5, units=64)
+    layer6 = fully_connected(features=layer5, units=64)
     layer6 = Relu(layer6)
-    layer6_1 = Dense(features=layer6, units=64)
+    layer6_1 = fully_connected(features=layer6, units=64)
     layer6_1 = Relu(layer6_1)
-    layer6_2 = Dense(features=layer6_1, units=64)
+    layer6_2 = fully_connected(features=layer6_1, units=64)
     layer6_2 = Relu(layer6_2)
 
     # a recurrent connection
     layer6_2 = add(layer6_2, layer6)
 
-    layer7 = Dense(features=layer6_2, units=32)
+    layer7 = fully_connected(features=layer6_2, units=32)
     layer7 = Relu(layer7)
-    layer8 = Dense(features=layer7, units=2)
+    layer8 = fully_connected(features=layer7, units=2)
 
     # define the logits and the loss
     logits = Softmax(layer8)

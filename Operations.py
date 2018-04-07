@@ -40,6 +40,13 @@ class add(Operation):
         return self.output
 
 
+    def back(self, upstream_grad):
+
+        # simply save the incoming gradient (to be used by the layer behind it, so pass on to them as it is)
+        self.gradients = upstream_grad
+
+        return self.gradients
+
 
 class dot(Operation):
 
@@ -67,6 +74,17 @@ class dot(Operation):
 
         return self.output
 
+
+    def back(self, upstream_grad):
+
+        # these will be required at weight update
+        self.weight_grad = None
+        self.bias_grad = None
+
+        # this will be the upstream for the previous layer
+        self.gradients = np.dot(self.prev_nodes[0].output, upstream_grad)
+
+        return self.gradients
 
 
 class sigmoid(Operation):
@@ -96,6 +114,11 @@ class sigmoid(Operation):
         return self.output
 
 
+    def back(self, upstream_grad):
+
+        pass
+
+
 class relu(Operation):
 
     """
@@ -123,6 +146,13 @@ class relu(Operation):
         return self.output
 
 
+    def back(self, upstream_grad):
+
+        self.gradients = upstream_grad * (self.output > 0)
+        return self.gradients
+
+
+
 class softmax_classifier(Operation):
 
     """
@@ -144,13 +174,19 @@ class softmax_classifier(Operation):
         # print(len(self.prev_nodes))
         input_matrix = self.prev_nodes[0].output
 
-        # exp sum
-        exps = np.exp(input_matrix)
+        # exp sum with numeric stability
+        exps = np.exp(input_matrix-np.max(np.max(input_matrix)))
         # print(exps.shape)
         self.output = exps / np.sum(exps, axis=1)[:,None]
         # print(self.output.shape)
         return self.output
 
+
+    def back(self, upstream_grad):
+
+        # s = self.output.reshape(-1, 1)
+        s = self.output
+        return np.diagflat(s) - np.dot(s, s.T)
 
 
 

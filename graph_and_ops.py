@@ -5,7 +5,7 @@
     this file contains just a few very basic wrappers for our graph
 """
 
-from utils import get_ordered_list
+from utils import get_postordered_list
 
 
 class GRAPH(object):
@@ -17,6 +17,7 @@ class GRAPH(object):
         self.Matrices = []
         self.operations = []
         self.layers = []
+        self.losses = []
         pass
 
 
@@ -41,7 +42,8 @@ class GRAPH(object):
 
         # self.forward_feed_order stores the list that will be used to propagate forward through a Graph object
         # for func in functions:
-        self.forward_feed_order = get_ordered_list(thisNode=function, _class=Operation)
+        self.forward_feed_order = get_postordered_list(thisNode=function, _class=Operation)
+        self.backprop_order = list(reversed(self.forward_feed_order[:-1]))
 
         if verbose:
             # print(self.operations)
@@ -70,7 +72,7 @@ class GRAPH(object):
         return out
 
 
-    def back(self):
+    def back_propagate(self):
 
         """
             apply backward prop on our network, will assume that the gradients have been calculated
@@ -88,12 +90,13 @@ class GRAPH(object):
         :return: a dictionary of gradients whose keys are the weights themselves
         """
 
-        for node in reversed(self.forward_feed_order):
-
-
-
-            pass
-
+        # assign a gradient of one to the loss
+        upstream_gradients = 1
+        for node in self.backprop_order: # basically go in reverse leaving the last (loss) element
+            print(node)
+            upstream_gradients = node.back(upstream_grad=upstream_gradients)
+            if not isinstance(upstream_gradients, int):
+                print(upstream_gradients.shape)
 
         pass
 
@@ -126,12 +129,24 @@ class Operation(object):
         pass
 
 
-    @property
     def compute(self):
         """
+            Forward Prop
             this function is called when we actually want the graph to run
             this method will be overridden by each child operation
         """
+        pass
+
+
+    def back(self, upstream_grad):
+        """
+            Backward Prop
+            Each operation will have its own back method to propagate in the backwards direction
+        :arg all back functions will require gradients coming from the upstream
+        :return: None, just calculates and assigns gradients
+        """
+        self.gradients = None
+
         pass
 
 
@@ -164,7 +179,6 @@ class Layer(object):
         pass
 
 
-    @property
     def compute(self):
         """
             the actual layers will override this method
@@ -172,6 +186,14 @@ class Layer(object):
         """
 
         pass
+
+
+
+    def back(self, upstream_grad):
+
+
+        pass
+
 
 
 
@@ -201,6 +223,13 @@ class placeholder(Operation):
 
 
 
+    def back(self, upstream_grad):
+
+        self.gradients = upstream_grad
+        return self.gradients
+
+
+
 class Matrix(Operation):
 
     """
@@ -225,6 +254,11 @@ class Matrix(Operation):
         self.output = self.matrix
 
 
+
+    def back(self, upstream_grad):
+
+        self.gradients = upstream_grad
+        return self.gradients
 
 
 

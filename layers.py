@@ -9,18 +9,17 @@ from __future__ import print_function
 from __future__ import division
 
 import numpy as np
-from graph_and_ops import Layer
 from Operations import*
 
 
 
-class Dense(Layer):
+class fully_connected(Layer):
     """
         A simple dense layer
     """
     def __init__(self, features, units):
 
-        super(Dense, self).__init__([features])
+        super(fully_connected, self).__init__([features])
 
         # initialize its ops
         # print(features.shape)

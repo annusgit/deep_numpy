@@ -1,13 +1,10 @@
 
 
 
-
-
-
-
 """
     A small main script to see how our library works
 """
+
 
 from __future__ import print_function
 from __future__ import division
@@ -16,7 +13,7 @@ from __future__ import division
 import numpy as np
 from graph_and_ops import GRAPH
 from Operations import placeholder
-from layers import Dense, Relu, Softmax
+from layers import fully_connected, Relu, Softmax
 from utils import Data
 from loss_functions import CrossEntropyLoss
 
@@ -63,17 +60,17 @@ def main():
     """
 
     # this is defined using layers
-    features = Dense(features=input_features, units=32)
+    features = fully_connected(features=input_features, units=32)
     features = Relu(features)
-    features = Dense(features=features, units=64)
+    features = fully_connected(features=features, units=64)
     features = Relu(features)
-    features = Dense(features=features, units=128)
+    features = fully_connected(features=features, units=128)
     features = Relu(features)
-    features = Dense(features=features, units=64)
+    features = fully_connected(features=features, units=64)
     features = Relu(features)
-    features = Dense(features=features, units=32)
+    features = fully_connected(features=features, units=32)
     features = Relu(features)
-    features = Dense(features=features, units=2)
+    features = fully_connected(features=features, units=2)
     logits = Softmax(features)
     loss = CrossEntropyLoss(softmax_logits=logits, labels=input_labels)
 

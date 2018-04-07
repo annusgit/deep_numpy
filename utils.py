@@ -27,7 +27,7 @@ class ordered_set(OrderedDict):
         return self.keys()
 
 
-def get_ordered_list(thisNode, _class):
+def get_postordered_list(thisNode, _class):
 
     # a util function to get a post-order list from a graph
     """

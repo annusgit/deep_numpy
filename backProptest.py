@@ -1,15 +1,12 @@
 
 
-"""
-    A small main script to see how our library works
-"""
-
 from __future__ import print_function
 from __future__ import division
 
-# from graph_and_ops import GRAPH
+import numpy as np
 from utils import Data
-from Operations import*
+from graph_and_ops import GRAPH, Matrix, placeholder
+from Operations import *
 from loss_functions import CrossEntropyLoss
 
 
@@ -83,29 +80,28 @@ def main():
     features = relu(features)
     features = add(dot(features, weights5), bias5)
     features = relu(features)
-
-    # features = Dense(features=features, units=32)
-    # features = relu(features)
-
     features = add(dot(features, weights6), bias6)
+
     logits = softmax_classifier(features)
     loss = CrossEntropyLoss(softmax_logits=logits, labels=input_labels)
 
-    # compile and run
     graph.graph_compile(function=loss, verbose=True)
-    loss_value = graph.run(input_matrices={input_features: train_batch_examples,
-                                     input_labels: train_batch_labels})
-    print(loss_value, logits.output.shape)
+    loss_value = graph.run(input_matrices={input_features: train_batch_examples, input_labels: train_batch_labels})
+    print(loss_value)
+
+    # calculate all the gradients in the network due to bad predictions
     graph.gradients()
-    # print(loss.gradients)
 
     pass
-
 
 
 if __name__ == '__main__':
 
     main()
+
+
+
+
 
 
 
