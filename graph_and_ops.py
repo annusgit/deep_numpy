@@ -36,6 +36,8 @@ class GRAPH(object):
                  Simply makes the graph ready to work!!!
 
         """
+
+        # self.forward_feed_order stores the list that will be used to propagate forward through a Graph object
         self.forward_feed_order = get_ordered_list(thisNode=function, _class=Operation)
 
         if verbose:
@@ -49,17 +51,46 @@ class GRAPH(object):
         """
             this is our feed forward implementation
         """
+
         # input_matrices will be a dictionary containing inputs to out network
         # let's assign the placeholders their values
         for placeholder in input_matrices.keys():
             placeholder.input_ = input_matrices[placeholder]
 
-        # this is the feedforward loop,
+        # go through each node (step) and do them in the right order
         for step in self.forward_feed_order:
             out = step.compute()
 
-        # returns the final output
+        # return the final output
         return out
+
+
+    def back(self):
+
+        """
+            apply backward prop on our network, will assume that the gradients have been calculated
+            will simply update all of the network weights
+        :return: None
+        """
+
+        pass
+
+
+    def gradients(self):
+
+        """
+            calculates all of the gradients of the loss function w.r.t network weights
+        :return: a dictionary of gradients whose keys are the weights themselves
+        """
+
+        for node in reversed(self.forward_feed_order):
+
+
+
+            pass
+
+
+        pass
 
 
 
@@ -85,10 +116,12 @@ class Operation(object):
         pass
 
 
+    @property
     def compute(self):
-        "this function is called when we actually want the graph to run"
-        # this method will be overridden by each child operation
-
+        """
+            this function is called when we actually want the graph to run
+            this method will be overridden by each child operation
+        """
         pass
 
 

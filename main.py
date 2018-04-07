@@ -49,23 +49,31 @@ def main():
 
 
     # start declaring variables
-    weights1 = Matrix(initial_value=np.random.uniform(low=-0.1,high=0.1,size=(32,128)))
+    weights1 = Matrix(initial_value=np.random.uniform(low=-0.1,high=0.1,size=(2,128)))
     weights2 = Matrix(initial_value=np.random.uniform(low=-0.1,high=0.1,size=(128)))
     # weights3 = Matrix(initial_value=np.random.uniform(low=-0.1,high=0.1,size=(100,100)))
 
     # calculate some features
     features = add(dot(input_features,weights1),weights2)
 
+    # calculate the logits
+    logits = softmax_classifier(features)
+
     # compile your graph
-    graph.graph_compile(function=features, verbose=True)
+    graph.graph_compile(function=logits, verbose=True)
 
 
     # this is kind of sess.run()
     output = graph.run(input_matrices={input_features: train_batch_examples})
     print(output.shape)
+    # print(output.shape)
+
+    # get the gradients and backpropagate
+    # graph.gradients(); graph.back()
+
 
     # the following is an accuracy score
-    print(np.add(np.dot(train_batch_examples.transpose(),weights1.matrix), weights2.matrix) == output)
+    # print(np.add(np.dot(train_batch_examples.transpose(),weights1.matrix), weights2.matrix) == output)
 
     pass
 
