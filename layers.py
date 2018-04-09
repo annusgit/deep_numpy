@@ -12,7 +12,6 @@ import numpy as np
 from Operations import*
 
 
-
 class fully_connected(Layer):
     """
         A simple dense layer
@@ -41,6 +40,16 @@ class fully_connected(Layer):
         return self.output
 
 
+    def back(self, upstream_grad):
+
+        # these will be required at weight update
+        self.weight_grad = np.dot(upstream_grad.transpose(), self.prev_nodes[0].output)
+        self.bias_grad = np.sum(upstream_grad, axis=1)
+
+        # this will be the upstream for the previous layer
+        self.gradients = np.dot(upstream_grad, self.W.transpose())
+        return self.gradients
+
 
 class Sigmoid(Layer):
 
@@ -67,6 +76,12 @@ class Sigmoid(Layer):
         self.output = 1 / (1 + np.exp(x))
 
         return self.output
+
+
+    def back(self, upstream_grad):
+
+
+        pass
 
 
 
@@ -97,33 +112,9 @@ class Relu(Layer):
         return self.output
 
 
-class Softmax(Layer):
-
-    """
-        our softmax squashing operation to convert numbers in real probabilities
-    """
-
-    def __init__(self, *input_nodes):
-
-        super(Softmax, self).__init__(input_nodes)
-
-        # we might need their shapes at some point
-        self.shape = input_nodes[0].shape
-        pass
-
-
-    def compute(self):
-
-        # input_matrix is the computation of the last layer before softmax
-        # print(len(self.prev_nodes))
-        input_matrix = self.prev_nodes[0].output
-
-        # exp sum
-        exps = np.exp(input_matrix)
-        # print(exps.shape)
-        self.output = exps / np.sum(exps, axis=1)[:,None]
-        # print(self.output.shape)
-        return self.output
+    def back(self, upstream_grad):
+        self.gradients = upstream_grad * (self.output > 0)
+        return self.gradients
 
 
 class Softmax(Layer):

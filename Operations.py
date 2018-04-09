@@ -78,8 +78,8 @@ class dot(Operation):
     def back(self, upstream_grad):
 
         # these will be required at weight update
-        self.weight_grad = None
-        self.bias_grad = None
+        self.weight_grad = np.dot(upstream_grad.transpose(), self.prev_nodes[0].output)
+        self.bias_grad = np.sum(upstream_grad, axis=1)
 
         # this will be the upstream for the previous layer
         self.gradients = np.dot(upstream_grad, self.prev_nodes[1].output.transpose())
@@ -147,7 +147,7 @@ class relu(Operation):
 
 
     def back(self, upstream_grad):
-        print(upstream_grad.shape)
+        #print(upstream_grad.shape)
         self.gradients = upstream_grad * (self.output > 0)
         return self.gradients
 
@@ -183,13 +183,18 @@ class softmax_classifier(Operation):
 
 
     def back(self, upstream_grad):
+        for node in self.next_nodes:
+            for n in node.prev_nodes:
+                if type(n).__name__ == 'placeholder':
+                    true_labels_matrix = n.output
 
+        # get the labels from the next node's prev nodes!
+        # true_labels_matrix = self.next_nodes[0]
 
-        # s = self.output.reshape(-1, 1)
-        s = self.output
-        self.gradients = s
-        # return np.diagflat(s) - np.dot(s, s.T)
+        softmax = self.output
+        self.gradients = (upstream_grad - np.reshape(np.sum(upstream_grad * softmax, 1),[-1, 1])) * softmax
 
+        # self.gradients = self.output * true_labels_matrix
         return self.gradients
 
 

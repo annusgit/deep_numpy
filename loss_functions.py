@@ -41,8 +41,56 @@ class CrossEntropyLoss(Loss):
         return self.output
 
 
+    def back(self, upstream_grad):
 
 
+        pass
+
+
+
+class Softmax_with_CrossEntropyLoss(Loss):
+    """
+        Used in classification problems mainly, will need logits from softmax
+        :return crossentropy loss function
+    """
+    def __init__(self, logits, labels):
+
+        super(Softmax_with_CrossEntropyLoss, self).__init__([logits, labels])
+
+        # it's just a real number!!!
+        self.shape = (1)
+
+
+    def compute(self):
+
+        logits, labels = self.prev_nodes[0].output, self.prev_nodes[1].output
+
+        # compute the softmax first
+        exps = np.exp(logits - np.max(np.max(logits)))
+        # print(exps.shape)
+        softmax_logits = exps / np.sum(exps, axis=1)[:, None]
+
+        # print(softmax_out.shape, labels.shape)
+        # print(type(softmax_out))
+        m = softmax_logits.shape[0]
+        # print(m)
+        log_likelihood = -np.log(softmax_logits[range(m), labels] + 0.001)  # prevent dividing by zero error, use "epsilon"
+        self.output = 1 / m * np.sum(log_likelihood)
+        # regularization = 0
+        # loss += regularization
+        return self.output
+
+
+    def back(self, upstream_grad):
+
+        # logits are assumed to be the outputs of the softmax classifier
+        softmax_out, true_labels = self.prev_nodes[0].output, self.prev_nodes[1].output
+        batch_size = self.prev_nodes[0].shape[0]
+        softmax_out[range(batch_size), true_labels] -= 1
+        softmax_out /= batch_size
+        # print(gradients.shape)
+        self.gradients = softmax_out
+        return self.gradients
 
 
 

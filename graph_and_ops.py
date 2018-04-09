@@ -46,7 +46,7 @@ class GRAPH(object):
         # self.forward_feed_order stores the list that will be used to propagate forward through a Graph object
         # for func in functions:
         self.forward_feed_order = get_postordered_list(thisNode=function, _class=Operation)
-        self.backprop_order = list(reversed(self.forward_feed_order[:-1]))
+        self.backprop_order = list(reversed(self.forward_feed_order)) # the whole list just in reverse
 
         if verbose:
             # print(self.operations)
@@ -80,6 +80,7 @@ class GRAPH(object):
         """
             apply backward prop on our network, will assume that the gradients have been calculated
             will simply update all of the network weights
+            call this method when the gradients have been calculated
         :return: None
         """
 

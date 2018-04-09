@@ -7,7 +7,7 @@ import numpy as np
 from utils import Data
 from graph_and_ops import GRAPH, Matrix, placeholder
 from Operations import *
-from loss_functions import CrossEntropyLoss
+from loss_functions import Softmax_with_CrossEntropyLoss
 
 
 def main():
@@ -80,10 +80,9 @@ def main():
     features = relu(features)
     features = add(dot(features, weights5), bias5)
     features = relu(features)
-    features = add(dot(features, weights6), bias6)
+    logits = add(dot(features, weights6), bias6)
 
-    logits = softmax_classifier(features)
-    loss = CrossEntropyLoss(softmax_logits=logits, labels=input_labels)
+    loss = Softmax_with_CrossEntropyLoss(logits=logits, labels=input_labels)
 
     graph.graph_compile(function=loss, verbose=True)
     loss_value = graph.run(input_matrices={input_features: train_batch_examples, input_labels: train_batch_labels})
