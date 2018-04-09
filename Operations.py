@@ -82,7 +82,7 @@ class dot(Operation):
         self.bias_grad = None
 
         # this will be the upstream for the previous layer
-        self.gradients = np.dot(self.prev_nodes[0].output, upstream_grad)
+        self.gradients = np.dot(upstream_grad, self.prev_nodes[1].output.transpose())
 
         return self.gradients
 
@@ -147,7 +147,7 @@ class relu(Operation):
 
 
     def back(self, upstream_grad):
-
+        print(upstream_grad.shape)
         self.gradients = upstream_grad * (self.output > 0)
         return self.gradients
 
@@ -184,10 +184,13 @@ class softmax_classifier(Operation):
 
     def back(self, upstream_grad):
 
+
         # s = self.output.reshape(-1, 1)
         s = self.output
-        return np.diagflat(s) - np.dot(s, s.T)
+        self.gradients = s
+        # return np.diagflat(s) - np.dot(s, s.T)
 
+        return self.gradients
 
 
 

@@ -5,6 +5,9 @@
     this file contains just a few very basic wrappers for our graph
 """
 
+from __future__ import print_function
+from __future__ import division
+
 from utils import get_postordered_list
 
 
@@ -93,12 +96,14 @@ class GRAPH(object):
         # assign a gradient of one to the loss
         upstream_gradients = 1
         for node in self.backprop_order: # basically go in reverse leaving the last (loss) element
-            print(node)
+            # print(node, end='')
             upstream_gradients = node.back(upstream_grad=upstream_gradients)
             if not isinstance(upstream_gradients, int):
-                print(upstream_gradients.shape)
-
-        pass
+                # print(type(upstream_gradients))
+                # print(upstream_gradients.shape)
+                # print(type(node).__name__, node.shape)
+                pass
+        # pass
 
 
 
@@ -146,7 +151,7 @@ class Operation(object):
         :return: None, just calculates and assigns gradients
         """
         self.gradients = None
-
+        # print(self.gradients.shape, end='')
         pass
 
 
