@@ -10,7 +10,7 @@ from __future__ import division
 # from graph_and_ops import GRAPH
 from utils import Data
 from Operations import*
-from loss_functions import CrossEntropyLoss
+from loss_functions import Softmax_with_CrossEntropyLoss
 
 
 def main():
@@ -87,9 +87,8 @@ def main():
     # features = Dense(features=features, units=32)
     # features = relu(features)
 
-    features = add(dot(features, weights6), bias6)
-    logits = softmax_classifier(features)
-    loss = CrossEntropyLoss(softmax_logits=logits, labels=input_labels)
+    logits = add(dot(features, weights6), bias6)
+    loss = Softmax_with_CrossEntropyLoss(logits=logits, labels=input_labels)
 
     # compile and run
     graph.graph_compile(function=loss, verbose=True)

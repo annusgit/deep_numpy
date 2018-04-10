@@ -12,10 +12,10 @@ from __future__ import division
 # from graph_and_ops import GRAPH
 import numpy as np
 from graph_and_ops import GRAPH
-from Operations import placeholder, add
-from layers import fully_connected, Relu, Softmax
+from Operations import placeholder, add, relu
+from layers import fully_connected
 from utils import Data
-from loss_functions import CrossEntropyLoss
+from loss_functions import Softmax_with_CrossEntropyLoss
 
 
 def main():
@@ -64,50 +64,49 @@ def main():
 
     # this is defined using layers
     layer1 = fully_connected(features=input_features, units=32)
-    layer1 = Relu(layer1)
+    layer1 = relu(layer1)
     layer2 = fully_connected(features=layer1, units=64)
-    layer2 = Relu(layer2)
+    layer2 = relu(layer2)
     layer2_1 = fully_connected(features=layer2, units=64)
-    layer2_1 = Relu(layer2_1)
+    layer2_1 = relu(layer2_1)
     layer2_2 = fully_connected(features=layer2_1, units=64)
-    layer2_2 = Relu(layer2_2)
+    layer2_2 = relu(layer2_2)
 
     # a recurrent connection
     layer2_2 = add(layer2_2, layer2)
 
     layer3 = fully_connected(features=layer2_2, units=128)
-    layer3 = Relu(layer3)
+    layer3 = relu(layer3)
     layer4 = fully_connected(features=layer3, units=128)
-    layer4 = Relu(layer4)
+    layer4 = relu(layer4)
     layer5 = fully_connected(features=layer4, units=128)
-    layer5 = Relu(layer5)
+    layer5 = relu(layer5)
 
     # a recurrent connection
     layer5 = add(layer5, layer3)
 
     layer6 = fully_connected(features=layer5, units=64)
-    layer6 = Relu(layer6)
+    layer6 = relu(layer6)
     layer6_1 = fully_connected(features=layer6, units=64)
-    layer6_1 = Relu(layer6_1)
+    layer6_1 = relu(layer6_1)
     layer6_2 = fully_connected(features=layer6_1, units=64)
-    layer6_2 = Relu(layer6_2)
+    layer6_2 = relu(layer6_2)
 
     # a recurrent connection
     layer6_2 = add(layer6_2, layer6)
 
     layer7 = fully_connected(features=layer6_2, units=32)
-    layer7 = Relu(layer7)
-    layer8 = fully_connected(features=layer7, units=2)
+    layer7 = relu(layer7)
+    logits = fully_connected(features=layer7, units=2)
 
     # define the logits and the loss
-    logits = Softmax(layer8)
-    loss = CrossEntropyLoss(softmax_logits=logits, labels=input_labels)
-
+    loss = Softmax_with_CrossEntropyLoss(logits=logits, labels=input_labels)
 
     # compile and run
     graph.graph_compile(function=loss, verbose=True)
     loss = graph.run(input_matrices={input_features: train_batch_examples, input_labels: train_batch_labels})
     print(loss, logits.output.shape)
+    graph.gradients()
 
 pass
 
