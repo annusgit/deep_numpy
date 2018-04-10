@@ -97,13 +97,14 @@ class GRAPH(object):
         # assign a gradient of one to the loss
         upstream_gradients = 1
         for node in self.backprop_order: # basically go in reverse leaving the last (loss) element
-            # print(node, end='')
+            # if node.is_trainable:
+            #     print(node)
             upstream_gradients = node.back(upstream_grad=upstream_gradients)
-            if not isinstance(upstream_gradients, int):
+            # if not isinstance(upstream_gradients, int):
                 # print(type(upstream_gradients))
                 # print(upstream_gradients.shape)
                 # print(type(node).__name__, node.shape)
-                pass
+                # pass
         # pass
 
 
@@ -132,6 +133,8 @@ class Operation(object):
         # and this will be the output of each operation, single matrix at most!!!
         self.output = None
 
+        # this will tell us which ops to train and which not to train
+        self.is_trainable = False
         pass
 
 
@@ -182,6 +185,8 @@ class Layer(object):
         # and this will be the output of each operation, single matrix at most!!!
         self.output = None
 
+        # again, set trainable param
+        self.is_trainable = False
         pass
 
 
@@ -252,6 +257,9 @@ class Matrix(Operation):
         self.matrix = initial_value
 
         self.shape = self.matrix.shape
+
+        # and it will be trainable ofcourse
+        self.is_trainable = True
         pass
 
 

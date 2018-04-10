@@ -12,8 +12,8 @@ from __future__ import division
 # from graph_and_ops import GRAPH
 import numpy as np
 from graph_and_ops import GRAPH
-from Operations import placeholder, add
-from layers import fully_connected, Relu
+from Operations import placeholder, add, relu as relu
+from layers import fully_connected
 from utils import Data
 from loss_functions import Softmax_with_CrossEntropyLoss
 
@@ -61,25 +61,25 @@ def main():
 
     # this is defined using layers
     features = fully_connected(features=input_features, units=32)
-    features = Relu(features)
+    features = relu(features)
     features = fully_connected(features=features, units=64)
-    features = Relu(features)
+    features = relu(features)
     features = fully_connected(features=features, units=128)
-    features = Relu(features)
+    features = relu(features)
     features_1 = fully_connected(features=features, units=256)
-    features_1 = Relu(features_1)
+    features_1 = relu(features_1)
     features_2 = fully_connected(features=features_1, units=256)
-    features_2 = Relu(features_2)
+    features_2 = relu(features_2)
     features_3 = fully_connected(features=features_2, units=256)
-    features_3 = Relu(features_3)
+    features_3 = relu(features_3)
 
     # check a recurrent connection
     features_3 = add(features_1, features_3)
 
     features = fully_connected(features=features_3, units=64)
-    features = Relu(features)
+    features = relu(features)
     features = fully_connected(features=features, units=32)
-    features = Relu(features)
+    features = relu(features)
     logits = fully_connected(features=features, units=2)
     loss = Softmax_with_CrossEntropyLoss(logits=logits, labels=input_labels)
 
