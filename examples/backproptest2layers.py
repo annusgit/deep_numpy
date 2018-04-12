@@ -103,6 +103,14 @@ def main():
     #     if layer.is_trainable:
     #         all_W.append([layer.W, layer.bias])
 
+    def evaluate(batch_examples, batch_labels):
+        loss = graph.run(input_matrices={input_features: batch_examples, input_labels: batch_labels})
+        accuracy = 100 / train_batch_size * np.sum(batch_labels == np.argmax(np.exp(logits.output) /
+                                                                                    np.sum(np.exp(logits.output),
+                                                                                    axis=1)[:, None], axis=1))
+
+        return [loss, accuracy]
+
     def training_loop(iterations):
         for m in xrange(iterations):
 
@@ -110,23 +118,35 @@ def main():
             indices = np.random.randint(low=0, high=train_size, size=train_batch_size)
             train_batch_examples, train_batch_labels = X[indices, :], y[indices]
 
-            loss = graph.run(input_matrices={input_features: train_batch_examples, input_labels: train_batch_labels})
-            accuracy = 100 / train_batch_size * np.sum(train_batch_labels == np.argmax(np.exp(logits.output) /
-                                                                                     np.sum(np.exp(logits.output),
-                                                                                     axis=1)[:,None], axis=1))
+            # get the system outputs
+            [loss, accuracy] = evaluate(batch_examples=train_batch_examples, batch_labels=train_batch_labels)
+
             if m % 500 == 0:
 
-                print('-----------')
-                print('log: at iteration #{}, batch loss = {}'.format(m, loss)) #, logits.output.shape)
-                print('log: at iteration #{}, batch accuracy = {}%'.format(m, accuracy)) #, logits.output.shape)
+                # print('-----------')
+                print('log: at iteration #{}, train batch loss = {}, train batch accuracy = {}%'.format(m, loss, accuracy)) #, logits.output.shape)
+                # print('batch accuracy = {}%'.format(m, accuracy)) #, logits.output.shape)
                 # print('-----------')
 
+            # calculate some evaluation accuracy
+            if m != 0 and m % 2000 == 0:
+                print('\n---------Evaluating Now-----------')
+                eval_loss, eval_accuracy = (0, 0)
+                steps = eval_size // train_batch_size
+                for k in range(steps):
+                    eval_indices = range(k*train_batch_size,(k+1)*train_batch_size)
+                    eval_batch_loss, eval_batch_accuracy = evaluate(batch_examples=eval_examples[eval_indices,:],
+                                                                    batch_labels=eval_labels[eval_indices])
+                    eval_loss += eval_batch_loss
+                    eval_accuracy += eval_batch_accuracy
+                print('log: evaluation loss = {}, evaluation accuracy = {}%'.format(eval_loss/steps, eval_accuracy/steps))
+                print('------------------------------------\n')
 
             # run and calculate the gradients
             graph.gradients()
 
             # update the weights
-            graph.update(learn_rate=8e-3)
+            graph.update(learn_rate=1e-2)
 
     training_loop(iterations=100000)
     # for layer, history in zip(graph.forward_feed_order, all_W):
