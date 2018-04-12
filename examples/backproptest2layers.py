@@ -25,7 +25,7 @@ def main():
     manager = Data()
     num_examples = 10**4
     max_val = 1
-    train_batch_size = 64
+    train_batch_size = 32
     train_size = int(num_examples/2)
     eval_size = int(num_examples/2)
     X, y = manager.create_data_set(num_of_examples=num_examples, max_val=max_val,
@@ -56,27 +56,41 @@ def main():
     """
 
     # this is defined using layers
-    features = fully_connected(features=input_features, units=32)
-    features = relu(features)
-    features = fully_connected(features=features, units=64)
-    features = relu(features)
-    features = fully_connected(features=features, units=128)
-    features = relu(features)
-    # features_1 = fully_connected(features=features, units=256)
-    # features_1 = relu(features_1)
-    # features_2 = fully_connected(features=features_1, units=256)
-    # features_2 = relu(features_2)
-    # features_3 = fully_connected(features=features_2, units=256)
-    # features_3 = relu(features_3)
+    layer1 = fully_connected(features=input_features, units=32)
+    layer1 = relu(layer1)
+    layer2 = fully_connected(features=layer1, units=64)
+    layer2 = relu(layer2)
+    layer2_1 = fully_connected(features=layer2, units=64)
+    layer2_1 = relu(layer2_1)
+    layer2_2 = fully_connected(features=layer2_1, units=64)
+    layer2_2 = relu(layer2_2)
 
-    # check a recurrent connection
-    # features_3 = add(features_1, features_3)
+    # a recurrent connection
+    layer2_2 = add(layer2_2, layer2)
 
-    features = fully_connected(features=features, units=64)
-    features = relu(features)
-    features = fully_connected(features=features, units=32)
-    features = relu(features)
-    logits = fully_connected(features=features, units=2)
+    layer3 = fully_connected(features=layer2_2, units=128)
+    layer3 = relu(layer3)
+    layer4 = fully_connected(features=layer3, units=128)
+    layer4 = relu(layer4)
+    layer5 = fully_connected(features=layer4, units=128)
+    layer5 = relu(layer5)
+
+    # a recurrent connection
+    layer5 = add(layer5, layer3)
+
+    layer6 = fully_connected(features=layer5, units=64)
+    layer6 = relu(layer6)
+    layer6_1 = fully_connected(features=layer6, units=64)
+    layer6_1 = relu(layer6_1)
+    layer6_2 = fully_connected(features=layer6_1, units=64)
+    layer6_2 = relu(layer6_2)
+
+    # a recurrent connection
+    layer6_2 = add(layer6_2, layer6)
+
+    layer7 = fully_connected(features=layer6_2, units=32)
+    layer7 = relu(layer7)
+    logits = fully_connected(features=layer7, units=2)
     loss = Softmax_with_CrossEntropyLoss(logits=logits, labels=input_labels)
 
     # compile and run
