@@ -138,17 +138,18 @@ class relu(Operation):
 
     def compute(self):
 
-        # A and B are two actual matrices that we want to add
-        x = self.prev_nodes[0].output
+        # we will need this input at backprop
+        self.input = self.prev_nodes[0].output
+
         # print(type(input_matrices[0]), type(input_matrices[1]))
-        self.output = x * (x > 0)
+        self.output = self.input * (self.input > 0)
 
         return self.output
 
 
     def back(self, upstream_grad):
         #print(upstream_grad.shape)
-        self.gradients = upstream_grad * (self.output > 0)
+        self.gradients = upstream_grad * (self.input > 0)
         return self.gradients
 
 

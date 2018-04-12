@@ -46,14 +46,26 @@ class fully_connected(Layer):
     def back(self, upstream_grad):
 
         # these will be required at weight update
-        self.weight_grad = np.dot(upstream_grad.transpose(), self.prev_nodes[0].output)
-        self.bias_grad = np.sum(upstream_grad, axis=1)
+        self.weight_grad = np.dot(upstream_grad.transpose(), self.prev_nodes[0].output).transpose()
+        self.bias_grad = np.sum(upstream_grad, axis=0)
+        # self.upstream = upstream_grad
 
         # this will be the upstream for the previous layer
         self.gradients = np.dot(upstream_grad, self.W.transpose())
         return self.gradients
 
 
+    def update(self, lr):
+
+        """
+            this method will be used to update our weights
+        :return: None
+        """
+        self.W += -lr * self.weight_grad
+        self.bias += -lr * self.bias_grad
+        # print(self.W.shape, self.weight_grad.shape)
+        # print(self.bias.shape, self.bias_grad.shape, np.sum(self.upstream, axis=0).shape)
+        pass
 
 
 

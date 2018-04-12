@@ -8,12 +8,13 @@
 
 from __future__ import print_function
 from __future__ import division
+from six.moves import xrange
 
 # from graph_and_ops import GRAPH
 import numpy as np
 from graph_and_ops import GRAPH
 from Operations import placeholder, add, relu as relu
-from layers import fully_connected
+from layers import fully_connected, softmax_classifier
 from utils import Data
 from loss_functions import Softmax_with_CrossEntropyLoss
 
@@ -39,11 +40,6 @@ def main():
                                                                                                 eval_examples.shape,
                                                                                                 eval_labels.shape))
 
-    # get some small train batch
-    indices = np.random.randint(low=0,high=train_size,size=train_batch_size)
-    train_batch_examples, train_batch_labels = X[indices,:], y[indices]
-
-
     # start by defining your default graph
     graph = GRAPH()
     graph.getDefaultGraph()
@@ -51,7 +47,7 @@ def main():
 
     # declare your placeholders, to provide your inputs
     # print(int(train_batch_examples.shape[1]))
-    input_features = placeholder(shape=(train_batch_size, int(train_batch_examples.shape[1])))
+    input_features = placeholder(shape=(train_batch_size, int(train_examples.shape[1])))
     input_labels = placeholder(shape=(train_batch_size))
 
 
@@ -74,7 +70,7 @@ def main():
     features_3 = relu(features_3)
 
     # check a recurrent connection
-    features_3 = add(features_1, features_3)
+    # features_3 = add(features_1, features_3)
 
     features = fully_connected(features=features_3, units=64)
     features = relu(features)
@@ -85,12 +81,32 @@ def main():
 
     # compile and run
     graph.graph_compile(function=loss, verbose=True)
-    loss = graph.run(input_matrices={input_features: train_batch_examples, input_labels: train_batch_labels})
 
-    # run and calculate the gradients
-    graph.gradients()
+    # run a training loop
+    for m in xrange(10000):
 
-    print(loss, logits.output.shape)
+        # get some small train batch
+        indices = np.random.randint(low=0, high=train_size, size=train_batch_size)
+        train_batch_examples, train_batch_labels = X[indices, :], y[indices]
+
+        loss = graph.run(input_matrices={input_features: train_batch_examples, input_labels: train_batch_labels})
+        accuracy = 100 / train_batch_size * np.sum(train_batch_labels == np.argmax(np.exp(logits.output) /
+                                                                                 np.sum(np.exp(logits.output),
+                                                                                 axis=1)[:,None], axis=1))
+        if m % 200 == 0:
+
+            print('-----------')
+            print('log: at iteration #{}, batch loss = {}'.format(m, loss)) #, logits.output.shape)
+            print('log: at iteration #{}, batch accuracy = {}%'.format(m, accuracy)) #, logits.output.shape)
+            # print('-----------')
+
+
+        # run and calculate the gradients
+        graph.gradients()
+
+        # update the weights
+        graph.update(learn_rate=3e-4)
+
 
 pass
 

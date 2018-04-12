@@ -94,18 +94,31 @@ class GRAPH(object):
         :return: a dictionary of gradients whose keys are the weights themselves
         """
 
-        # assign a gradient of one to the loss
+        # assign a gradient of one to the derivative of loss w.r.t the loss function
         upstream_gradients = 1
         for node in self.backprop_order: # basically go in reverse leaving the last (loss) element
             # if node.is_trainable:
             #     print(node)
             upstream_gradients = node.back(upstream_grad=upstream_gradients)
+            # print(type(node).__name__, upstream_gradients)
             # if not isinstance(upstream_gradients, int):
                 # print(type(upstream_gradients))
                 # print(upstream_gradients.shape)
                 # print(type(node).__name__, node.shape)
                 # pass
         # pass
+
+    def update(self, learn_rate=3e-4):
+
+        for node in self.backprop_order:
+            if node.is_trainable:
+                node.update(lr=learn_rate)
+        """
+            this method will update the weights using the gradients
+        :return:
+        """
+
+        pass
 
 
 

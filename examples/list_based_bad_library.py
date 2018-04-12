@@ -84,8 +84,8 @@ class Network(object):
         pass
 
     def add_dense_layer(self, units):
-        w = np.random.uniform(low=-0.1, high=0.1, size=(self.last_features_size, units))
-        b = np.ones(shape=(self.batch_size, units))
+        w = np.asarray(np.random.uniform(low=-0.1, high=0.1, size=(self.last_features_size, units)), dtype=np.float64)
+        b = np.asarray(np.ones(shape=(self.batch_size, units)), dtype=np.float64)
         self.net_chain.append(['dense',w,b])
         num_params = (self.batch_size+self.last_features_size)*units
         self.summary_chain.append('layer-{}: Dense, units: {}, parameters: {}'.format(self.num_layers,units,num_params))
@@ -110,7 +110,13 @@ class Network(object):
 
     def __softmax(self, x):
         # this is a more stable implementation of the softmax function
-        x -= np.max(x, axis=1)[:,None]
+        # avoid huge values
+        x = np.nan_to_num(x, copy=True)
+        try:
+            x -= np.max(x, axis=1)[:,None]
+        except RuntimeWarning:
+            print(x)
+        #print(np.max(x))
         exps = np.exp(x)
         # print(np.max(np.max(exps)))
         return exps / np.sum(exps,axis=1)[:,None]
@@ -159,7 +165,7 @@ class Network(object):
 
     def loss(self, logits, y):
         m = y.shape[0]
-        log_likelihood = -np.log(logits[range(m), y]+0.001) # prevent dividing by zero error, use "epsilon"
+        log_likelihood = -np.log(logits[range(m), y]+0.01) # prevent dividing by zero error, use "epsilon"
         loss = 1/m*np.sum(log_likelihood)
         regularization = 0
         loss += regularization
@@ -226,7 +232,20 @@ class Network(object):
 
         pass
 
-    def backward_pass(self, cache_list, learning_rate=1e-3):
+    def normalize_weights(self):
+        """
+            this method is to avoid diverging values of weights
+        :return:
+        """
+        for layer in enumerate(self.net_chain,1):
+            if layer[0] == 'dense':
+                # save them before being changed
+                layer[1] /= np.max(layer[1])
+                layer[2] /= np.max(layer[2])
+
+        pass
+
+    def backward_pass(self, cache_list, learning_rate=1e-3, normalize_weights=False):
         # we shall update the weights in a new list and assign it to the actual self.net_chain at the end
         # after reversing it!!!
         new_net_chain = []
@@ -235,6 +254,9 @@ class Network(object):
             # start with calculating the softmax crossentropy loss
             if idx == 1:
                 upstream_derivative = np.ones(shape=(self.batch_size, self.last_features_size))
+            # print(type(layer).__name__, ))
+            # clip gradients to avoid exploding gradients
+            np.clip(upstream_derivative, a_min=-5.0, a_max=5.0, out=upstream_derivative)
             if layer[0] == 'softmax_classifier_with_crossentropy_loss_function':
                 new_net_chain.append(layer)
                 softmax_cache = cache_list.pop()
@@ -242,6 +264,7 @@ class Network(object):
                                                                                                      true_labels=softmax_cache[2])
                 upstream_derivative = np.multiply(gradients, upstream_derivative)
                 # print(idx, upstream_derivative.shape, gradients.shape, softmax_cache[0], layer[0], len(cache_list))
+                # print('softmax', np.max(np.max(upstream_derivative)))
             elif layer[0] == 'dense':
                 dense_cache = cache_list.pop()
                 gradients = self.dense_layer_derivatives(X=dense_cache[1], W=dense_cache[2])
@@ -250,6 +273,12 @@ class Network(object):
                 weight_update = np.dot(gradients[1].transpose(), upstream_derivative)
                 layer[1] += -learning_rate*weight_update
                 layer[2] += -learning_rate*upstream_derivative
+
+                # for controlling large values of weights and gradientss
+                if normalize_weights:
+                    layer[1] /= 10 #np.max(layer[1])
+                    layer[2] /= 10 #np.max(layer[2])
+
                 new_net_chain.append(layer)
                 upstream_derivative = np.dot(upstream_derivative, gradients[0].transpose())
                 # print(idx, upstream_derivative.shape, gradients[0].shape, dense_cache[0], layer[0], len(cache_list))
@@ -257,16 +286,18 @@ class Network(object):
                 # layer[1] += -0.001*np.dot(gradients[1], upstream_derivative.transpose())
                 # return
                 # layer[0] +=
+                # print('dense', np.max(np.max(upstream_derivative)))
             elif layer[0] == 'dropout':
                 new_net_chain.append(layer)
                 dropout_cache = cache_list.pop()
                 # gradients = self.__derivative_of_sigmoid(h=sigmoid_cache[1])
-                upstream_derivative = np.multiply(upstream_derivative, dropout_cache[1])
+                # upstream_derivative = np.multiply(upstream_derivative, dropout_cache[1])
             elif layer[0] == 'sigmoid':
                 new_net_chain.append(layer)
                 sigmoid_cache = cache_list.pop()
                 gradients = self.__derivative_of_sigmoid(h=sigmoid_cache[1])
                 upstream_derivative = np.multiply(upstream_derivative, gradients)
+                # print('sigmoid', np.max(np.max(upstream_derivative)))
             elif layer[0] == 'relu':
                 new_net_chain.append(layer)
                 relu_cache = cache_list.pop()
@@ -274,6 +305,7 @@ class Network(object):
                 upstream_derivative = np.multiply(upstream_derivative, gradients)
                 # print('max val = {}'.format(np.max(np.max(upstream_derivative))))
                 # print(idx, upstream_derivative.shape, gradients.shape, sigmoid_cache[0], layer[0], len(cache_list))
+                # print('relu', np.max(np.max(upstream_derivative)))
         # del self.net_chain # just in case
         del self.net_chain
         new_net_chain.reverse()
@@ -326,7 +358,7 @@ class Network(object):
             # forward_time = time.clock() - forward_start
             # print(len(cache))
             # backward_start = time.clock()
-            self.backward_pass(cache_list=cache, learning_rate=lr)
+            self.backward_pass(cache_list=cache, learning_rate=lr, normalize_weights=False)
             # backward_time = time.clock() - backward_start
             # if batch_number % show_train_status_after == 0:
                 # print('log: iteration = {} time elapsed for one batch: forward pass = {}, backward pass = {}'.format(
@@ -420,7 +452,7 @@ class Data(object):
             # np.random.shuffle(discriminator) # just do this to get a better plot
             y = np.zeros(shape=(kwargs['num_of_examples']))
             y[x_vals > discriminator] = 1
-            y = y.astype(np.int32)
+            y = y.astype(np.int64)
         if 'save_dataset' in kwargs.keys():
             np.save(kwargs['filename'], (X, y, discriminator))
             print('log: dataset saved as {}'.format(kwargs['filename']))
@@ -431,7 +463,7 @@ class Data(object):
         # must do this shuffling to make a better dataset
         full_deck = np.concatenate((X.transpose(), y.reshape((y.shape[0], 1))), axis=1)
         np.random.shuffle(full_deck)
-        y = full_deck[:, 2].astype(np.int32)
+        y = full_deck[:, 2].astype(np.int64)
         X = full_deck[:, 0:2]
         # print(full_deck.shape)
 
@@ -469,7 +501,7 @@ def main():
     eval_size = int(num_examples/2)
     X, y = manager.create_data_set(num_of_examples=num_examples, max_val=max_val,
                                    discriminator=lambda x: max_val*(1/(1+np.exp(-x)) + 1/(1+np.exp(x**2)))-max_val/2,
-                                   one_hot=False, plot_data=True, load_saved_data=True, filename='dataset.npy')
+                                   one_hot=False, plot_data=False, load_saved_data=True, filename='dataset.npy')
 
     # examples_batch = X[:batch_size,:]
     # labels_batch = y[:batch_size]
@@ -493,8 +525,8 @@ def main():
     nn.activate(activation='relu')
     # nn.add_dropout(drop_rate=0.5)
 
-    nn.add_dense_layer(units=512)
-    nn.activate(activation='relu')
+    # nn.add_dense_layer(units=512)
+    # nn.activate(activation='relu')
     # nn.add_dropout(drop_rate=0.5)
 
     # nn.add_dense_layer(units=512)
@@ -505,12 +537,12 @@ def main():
     # nn.activate(activation='sigmoid')
     # nn.add_dropout(drop_rate=0.2)
 
-    # nn.add_dense_layer(units=256)
-    # nn.activate(activation='relu')
+    nn.add_dense_layer(units=256)
+    nn.activate(activation='relu')
     # nn.add_dropout(drop_rate=0.5)
 
-    # nn.add_dense_layer(units=128)
-    # nn.activate(activation='relu')
+    nn.add_dense_layer(units=128)
+    nn.activate(activation='relu')
     # nn.add_dropout(drop_rate=0.5)
 
     nn.add_dense_layer(units=64)
@@ -518,7 +550,7 @@ def main():
     # nn.add_dropout(drop_rate=0.5)
 
     nn.add_dense_layer(units=32)
-    nn.activate(activation='sigmoid')
+    nn.activate(activation='relu')
     nn.add_dropout(drop_rate=0.5)
 
     nn.add_dense_layer(units=2)
