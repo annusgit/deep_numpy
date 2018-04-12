@@ -111,11 +111,11 @@ class Network(object):
     def __softmax(self, x):
         # this is a more stable implementation of the softmax function
         # avoid huge values
-        x = np.nan_to_num(x, copy=True)
-        try:
-            x -= np.max(x, axis=1)[:,None]
-        except RuntimeWarning:
-            print(x)
+        # x = np.nan_to_num(x, copy=True)
+        # try:
+        x -= np.max(x, axis=1)[:,None]
+        # except RuntimeWarning:
+        #     print(x)
         #print(np.max(x))
         exps = np.exp(x)
         # print(np.max(np.max(exps)))
@@ -256,7 +256,7 @@ class Network(object):
                 upstream_derivative = np.ones(shape=(self.batch_size, self.last_features_size))
             # print(type(layer).__name__, ))
             # clip gradients to avoid exploding gradients
-            np.clip(upstream_derivative, a_min=-5.0, a_max=5.0, out=upstream_derivative)
+            # np.clip(upstream_derivative, a_min=-5.0, a_max=5.0, out=upstream_derivative)
             if layer[0] == 'softmax_classifier_with_crossentropy_loss_function':
                 new_net_chain.append(layer)
                 softmax_cache = cache_list.pop()
@@ -368,8 +368,9 @@ class Network(object):
                 self.evaluate(eval_set=eval_set)
             # nn.net_chain_summary()
 
-            if batch_number % save_after == 0 and batch_number > 0 and Save :
-                self.save_net(save_file_name='{}/{}-{}'.format(save_dir, save_file_name, batch_number))
+            if save_after:
+                if batch_number % save_after == 0 and batch_number > 0 and Save :
+                    self.save_net(save_file_name='{}/{}-{}'.format(save_dir, save_file_name, batch_number))
 
             # update the learning rate after each batch
             if batch_number % decay_after == 0 and batch_number > 0:
@@ -518,11 +519,11 @@ def main():
 
     nn = Network(batch_size=train_batch_size, feature_size=X.shape[1])
     nn.add_dense_layer(units=128)
-    nn.activate(activation='relu')
+    nn.activate(activation='sigmoid')
     nn.add_dropout(drop_rate=0.5)
 
     nn.add_dense_layer(units=256)
-    nn.activate(activation='relu')
+    nn.activate(activation='sigmoid')
     # nn.add_dropout(drop_rate=0.5)
 
     # nn.add_dense_layer(units=512)
@@ -538,19 +539,19 @@ def main():
     # nn.add_dropout(drop_rate=0.2)
 
     nn.add_dense_layer(units=256)
-    nn.activate(activation='relu')
+    nn.activate(activation='sigmoid')
     # nn.add_dropout(drop_rate=0.5)
 
     nn.add_dense_layer(units=128)
-    nn.activate(activation='relu')
+    nn.activate(activation='sigmoid')
     # nn.add_dropout(drop_rate=0.5)
 
     nn.add_dense_layer(units=64)
-    nn.activate(activation='relu')
+    nn.activate(activation='sigmoid')
     # nn.add_dropout(drop_rate=0.5)
 
     nn.add_dense_layer(units=32)
-    nn.activate(activation='relu')
+    nn.activate(activation='sigmoid')
     nn.add_dropout(drop_rate=0.5)
 
     nn.add_dense_layer(units=2)
@@ -562,9 +563,9 @@ def main():
     # nn.summary()
 
     nn.train_net(training_set=(train_examples, train_labels), eval_set=(eval_examples, eval_labels),
-                 lr=5e-3, lr_decay=0.95, decay_after=5000, iterations=10**6, show_train_status_after=100,
+                 lr=1e-3, lr_decay=0.95, decay_after=5000, iterations=10**6, show_train_status_after=100,
                  load_saved_net=False, saved_model_name='numpy_models/numpy_model-4999.pickle', evaluate_after=500,
-                 save_dir='numpy_models', save_file_name='numpy_model', save_after=5000)
+                 save_dir='numpy_models', save_file_name='numpy_model', save_after=None)
 
     # for i in range(10**4):
     #     forward_start = time.clock()

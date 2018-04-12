@@ -25,7 +25,7 @@ def main():
     manager = Data()
     num_examples = 10**4
     max_val = 1
-    train_batch_size = 16
+    train_batch_size = 64
     train_size = int(num_examples/2)
     eval_size = int(num_examples/2)
     X, y = manager.create_data_set(num_of_examples=num_examples, max_val=max_val,
@@ -62,17 +62,17 @@ def main():
     features = relu(features)
     features = fully_connected(features=features, units=128)
     features = relu(features)
-    features_1 = fully_connected(features=features, units=256)
-    features_1 = relu(features_1)
-    features_2 = fully_connected(features=features_1, units=256)
-    features_2 = relu(features_2)
-    features_3 = fully_connected(features=features_2, units=256)
-    features_3 = relu(features_3)
+    # features_1 = fully_connected(features=features, units=256)
+    # features_1 = relu(features_1)
+    # features_2 = fully_connected(features=features_1, units=256)
+    # features_2 = relu(features_2)
+    # features_3 = fully_connected(features=features_2, units=256)
+    # features_3 = relu(features_3)
 
     # check a recurrent connection
     # features_3 = add(features_1, features_3)
 
-    features = fully_connected(features=features_3, units=64)
+    features = fully_connected(features=features, units=64)
     features = relu(features)
     features = fully_connected(features=features, units=32)
     features = relu(features)
@@ -83,31 +83,41 @@ def main():
     graph.graph_compile(function=loss, verbose=True)
 
     # run a training loop
-    for m in xrange(10000):
 
-        # get some small train batch
-        indices = np.random.randint(low=0, high=train_size, size=train_batch_size)
-        train_batch_examples, train_batch_labels = X[indices, :], y[indices]
+    # all_W = []
+    # for layer in graph.forward_feed_order:
+    #     if layer.is_trainable:
+    #         all_W.append([layer.W, layer.bias])
 
-        loss = graph.run(input_matrices={input_features: train_batch_examples, input_labels: train_batch_labels})
-        accuracy = 100 / train_batch_size * np.sum(train_batch_labels == np.argmax(np.exp(logits.output) /
-                                                                                 np.sum(np.exp(logits.output),
-                                                                                 axis=1)[:,None], axis=1))
-        if m % 200 == 0:
+    def training_loop(iterations):
+        for m in xrange(iterations):
 
-            print('-----------')
-            print('log: at iteration #{}, batch loss = {}'.format(m, loss)) #, logits.output.shape)
-            print('log: at iteration #{}, batch accuracy = {}%'.format(m, accuracy)) #, logits.output.shape)
-            # print('-----------')
+            # get some small train batch
+            indices = np.random.randint(low=0, high=train_size, size=train_batch_size)
+            train_batch_examples, train_batch_labels = X[indices, :], y[indices]
+
+            loss = graph.run(input_matrices={input_features: train_batch_examples, input_labels: train_batch_labels})
+            accuracy = 100 / train_batch_size * np.sum(train_batch_labels == np.argmax(np.exp(logits.output) /
+                                                                                     np.sum(np.exp(logits.output),
+                                                                                     axis=1)[:,None], axis=1))
+            if m % 500 == 0:
+
+                print('-----------')
+                print('log: at iteration #{}, batch loss = {}'.format(m, loss)) #, logits.output.shape)
+                print('log: at iteration #{}, batch accuracy = {}%'.format(m, accuracy)) #, logits.output.shape)
+                # print('-----------')
 
 
-        # run and calculate the gradients
-        graph.gradients()
+            # run and calculate the gradients
+            graph.gradients()
 
-        # update the weights
-        graph.update(learn_rate=3e-4)
+            # update the weights
+            graph.update(learn_rate=8e-3)
 
-
+    training_loop(iterations=100000)
+    # for layer, history in zip(graph.forward_feed_order, all_W):
+    #     print("{}".format("True" if layer == history else "False"))
+#
 pass
 
 
