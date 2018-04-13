@@ -147,6 +147,9 @@ def main():
                 print('log: evaluation loss = {}, evaluation accuracy = {}%'.format(eval_loss/steps, eval_accuracy/steps))
                 print('------------------------------------\n')
 
+            # do some testing
+            if m != 0 and m % 50000 == 0:
+                test_model()
             # run and calculate the gradients w.r.t to the loss function
             graph.gradients(function=loss)
 
@@ -158,26 +161,46 @@ def main():
             # update the weights
             graph.update(learn_rate=1e-2)
 
-    training_loop(iterations=100001)
-    # for layer, history in zip(graph.forward_feed_order, all_W):
-    #     print("{}".format("True" if layer == history else "False"))
+    def test_model():
+        # now finally testing the model
 
-    # let's plot the decision boundary
-    figure = plot.figure()
-    # print(type(figure))
-    x_ = np.linspace(start=-max_val,stop=max_val,num=64)
-    # we want to evaluate this thing
-    space = [(x,y) for x in x_ for y in x_]
-    # print(len(space))
+        x_ = np.linspace(start=-max_val, stop=max_val, num=64)
+        # we want to evaluate this thing
+        test_set = np.asarray([(x, y) for x in x_ for y in x_], dtype=np.float64)
+        print('log: your test set is {}'.format(test_set.shape))
+
+        all_predictions = []
+        print('\n---------Testing Now-----------')
+        steps = 64 * 64 // train_batch_size
+        for k in range(steps):
+            test_indices = range(k * train_batch_size, (k + 1) * train_batch_size)
+            test_logits = graph.run(function=logits, input_matrices={input_features: test_set[test_indices, :]})
+            test_logits -= np.max(test_logits)
+            exps = np.exp(test_logits)
+            softmaxed = exps / np.sum(exps, axis=1)[:, None]
+            # print(softmaxed)
+            predictions = np.argmax(softmaxed, axis=1)
+            # print(predictions)
+            # print(predictions)
+
+            # fill up predictions
+            all_predictions.append(predictions)
+
+        print('------------------------------------\n')
+        predictions = np.hstack(all_predictions)
+        # print(predictions.shape)
+
+        red = test_set[predictions == 0]
+        green = test_set[predictions == 1]
+
+        plot.scatter(green[:, 0], green[:, 1], color='g')
+        plot.scatter(red[:, 0], red[:, 1], color='r')
+        plot.show()
+
+    training_loop(iterations=1000000)
 
 
-    plot.scatter([val[0] for val in space], [val[1] for val in space])
-    # print(space, space.shape)
-    plot.show()
 
-
-
-#
 pass
 
 
