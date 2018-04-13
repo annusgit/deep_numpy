@@ -82,21 +82,24 @@ class Softmax_with_CrossEntropyLoss(Loss):
         return self.output
 
 
-    def back(self, upstream_grad):
+    def back(self):
 
         # gradients = logits
         # gradients[range(self.batch_size), true_labels] -= 1
         # gradients /= self.batch_size
 
+        # get the upstream gradient
+        super(Softmax_with_CrossEntropyLoss, self).back()
 
         # logits are assumed to be the outputs of the softmax classifier
         true_labels = self.prev_nodes[1].output
         batch_size = self.prev_nodes[0].shape[0]
-        self.gradients = self.softmax_logits
-        self.gradients[range(batch_size), true_labels] -= 1
-        self.gradients /= batch_size
+        gradients = self.softmax_logits
+
+        gradients[range(batch_size), true_labels] -= 1
+        gradients /= batch_size
         # print(gradients.shape)
-        return self.gradients
+        self.upstream_grad =  np.multiply(gradients, self.upstream_grad)
 
 
 

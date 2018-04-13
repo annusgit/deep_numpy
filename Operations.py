@@ -40,12 +40,13 @@ class add(Operation):
         return self.output
 
 
-    def back(self, upstream_grad):
+    def back(self):
 
         # simply save the incoming gradient (to be used by the layer behind it, so pass on to them as it is)
-        self.gradients = upstream_grad
 
-        return self.gradients
+        # remember to add all the gradients coming from the next nodes
+        # use parent class method for doing so
+        super(add, self).back()
 
 
 class dot(Operation):
@@ -75,16 +76,18 @@ class dot(Operation):
         return self.output
 
 
-    def back(self, upstream_grad):
+    def back(self):
+
+        # get the gradients
+        super(dot, self).back()
 
         # these will be required at weight update
-        self.weight_grad = np.dot(upstream_grad.transpose(), self.prev_nodes[0].output)
-        self.bias_grad = np.sum(upstream_grad, axis=1)
+        self.weight_grad = np.dot(self.upstream_grad.transpose(), self.prev_nodes[0].output)
+        self.bias_grad = np.sum(self.upstream_grad, axis=1)
 
         # this will be the upstream for the previous layer
-        self.gradients = np.dot(upstream_grad, self.prev_nodes[1].output.transpose())
+        self.upstream_grad = np.dot(self.upstream_grad, self.prev_nodes[1].output.transpose())
 
-        return self.gradients
 
 
 class sigmoid(Operation):
@@ -114,9 +117,13 @@ class sigmoid(Operation):
         return self.output
 
 
-    def back(self, upstream_grad):
+    def back(self):
 
-        pass
+        super(sigmoid, self).back()
+
+        # gradient of sigmoid
+        self.upstream_grad = self.upstream_grad * self.output * (1-self.output)
+
 
 
 class relu(Operation):
@@ -142,15 +149,19 @@ class relu(Operation):
         self.input = self.prev_nodes[0].output
 
         # print(type(input_matrices[0]), type(input_matrices[1]))
-        self.output = self.input * (self.input > 0)
+        self.mask = self.input > 0 # used for backprop
+        self.output = np.multiply(self.input, self.mask)
 
         return self.output
 
 
-    def back(self, upstream_grad):
+    def back(self):
+
+        # get the upstream gradient using the parent method
+        super(relu, self).back()
+
         #print(upstream_grad.shape)
-        self.gradients = upstream_grad * (self.input > 0)
-        return self.gradients
+        self.upstream_grad = np.multiply(self.upstream_grad, self.mask)
 
 
 

@@ -23,7 +23,8 @@ class fully_connected(Layer):
         # initialize its ops
         # print(features.shape)
         self.W = np.random.uniform(low=-0.1,high=0.1,size=(features.shape[1],units))
-        self.bias = np.ones(shape=units)
+        self.bias = np.ones(shape=(features.shape[0], units))
+        # print(self.W.shape, self.bias.shape)
 
         # this will be our connection to the network
         # this is the shape of the matrix that will come at the output!!!
@@ -43,16 +44,19 @@ class fully_connected(Layer):
         return self.output
 
 
-    def back(self, upstream_grad):
+    def back(self):
+
+        # get the upstream gradient from the parent method
+        super(fully_connected, self).back()
 
         # these will be required at weight update
-        self.weight_grad = np.dot(upstream_grad.transpose(), self.prev_nodes[0].output).transpose()
-        self.bias_grad = np.sum(upstream_grad, axis=0)
-        # self.upstream = upstream_grad
+        # print(self.W.shape)
+        self.weight_grad = np.dot(self.prev_nodes[0].output.transpose(), self.upstream_grad)
+        # self.bias_grad = np.sum(upstream_grad, axis=0)
+        self.bias_grad = self.upstream_grad
 
         # this will be the upstream for the previous layer
-        self.gradients = np.dot(upstream_grad, self.W.transpose())
-        return self.gradients
+        self.upstream_grad = np.dot(self.upstream_grad, self.W.transpose())
 
 
     def update(self, lr):

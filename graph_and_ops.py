@@ -9,6 +9,7 @@ from __future__ import print_function
 from __future__ import division
 
 from utils import get_postordered_list
+import numpy as np
 
 
 class GRAPH(object):
@@ -37,7 +38,7 @@ class GRAPH(object):
     def graph_compile(self, function, verbose=False):
         """
             get a post-order of the graph for feed forward, needs a function to target for feed-forward
-            or as many functions as you want
+            the target should always be the loss function
         :return: None
                  Simply makes the graph ready to work!!!
 
@@ -45,17 +46,27 @@ class GRAPH(object):
 
         # self.forward_feed_order stores the list that will be used to propagate forward through a Graph object
         # for func in functions:
-        self.forward_feed_order = get_postordered_list(thisNode=function, _class=Operation)
-        self.backprop_order = list(reversed(self.forward_feed_order)) # the whole list just in reverse
+        loss_forward_feed_order = get_postordered_list(thisNode=function)
+        loss_backprop_order = list(reversed(loss_forward_feed_order)) # the whole list just in reverse
+        self.loss = function
+
+        # also maintain a dict of operations that we can perform
+        self.forward_propagation_dict, self.backward_propagation_dict = {}, {}
+        self.forward_propagation_dict[self.loss] = loss_forward_feed_order
+        self.backward_propagation_dict[self.loss] = loss_backprop_order
 
         if verbose:
             # print(self.operations)
             print('log: a very crude Summary of your graph...')
-            for step in self.forward_feed_order:
+            for step in self.forward_propagation_dict[self.loss]:
+                print('\t {} shape = {}'.format(step, step.shape))
+
+            print('log: And this will be the order of backprop...')
+            for step in self.backward_propagation_dict[self.loss]:
                 print('\t {} shape = {}'.format(step, step.shape))
 
 
-    def run(self, input_matrices):
+    def run(self, function, input_matrices):
 
         """
             this is our feed forward implementation
@@ -67,7 +78,15 @@ class GRAPH(object):
             placeholder.input_ = input_matrices[placeholder]
 
         # go through each node (step) and do them in the right order
-        for step in self.forward_feed_order:
+        # but find the function first
+        if function in self.forward_propagation_dict.keys():
+            forward_order = self.forward_propagation_dict[function]
+        else:
+            # get it's post order
+            self.forward_propagation_dict[function] = get_postordered_list(thisNode=function)
+            forward_order = self.forward_propagation_dict[function]
+
+        for step in forward_order:
             out = step.compute()
             # print(out.shape)
 
@@ -87,7 +106,7 @@ class GRAPH(object):
         pass
 
 
-    def gradients(self):
+    def gradients(self, function):
 
         """
             calculates all of the gradients of the loss function w.r.t network weights
@@ -95,11 +114,22 @@ class GRAPH(object):
         """
 
         # assign a gradient of one to the derivative of loss w.r.t the loss function
-        upstream_gradients = 1
-        for node in self.backprop_order: # basically go in reverse leaving the last (loss) element
+        # upstream_gradients = 1
+        # self.backprop_order[-1].upstream_grad = 1
+
+        # get that function
+        if function in self.backward_propagation_dict.keys():
+            back_order = self.backward_propagation_dict[function]
+        else:
+            forward_order = get_postordered_list(thisNode=function)
+            back_order = list(reversed(forward_order))
+
+        for node in back_order: # basically go in reverse leaving the last (loss) element
             # if node.is_trainable:
             #     print(node)
-            upstream_gradients = node.back(upstream_grad=upstream_gradients)
+            if not isinstance(node, Matrix) and not isinstance(node, placeholder):
+                # print(node)
+                node.back()
             # print(type(node).__name__, upstream_gradients)
             # if not isinstance(upstream_gradients, int):
                 # print(type(upstream_gradients))
@@ -110,7 +140,7 @@ class GRAPH(object):
 
     def update(self, learn_rate=3e-4):
 
-        for node in self.backprop_order:
+        for node in self.backward_propagation_dict[self.loss]:
             if node.is_trainable:
                 node.update(lr=learn_rate)
         """
@@ -148,6 +178,10 @@ class Operation(object):
 
         # this will tell us which ops to train and which not to train
         self.is_trainable = False
+
+        # store the upstream gradient
+        self.upstream_grad = None
+
         pass
 
 
@@ -160,14 +194,22 @@ class Operation(object):
         pass
 
 
-    def back(self, upstream_grad):
+    def back(self):
         """
             Backward Prop
             Each operation will have its own back method to propagate in the backwards direction
         :arg all back functions will require gradients coming from the upstream
         :return: None, just calculates and assigns gradients
         """
-        self.gradients = None
+
+        # remember to add all the gradients coming from the next nodes
+        if len(self.next_nodes) != 0:
+            self.upstream_grad = np.zeros_like(self.output)
+            for node in self.next_nodes:
+                self.upstream_grad = np.add(self.upstream_grad, node.upstream_grad)
+        else: # then it must be the last node, most probably the lost function itself
+            self.upstream_grad = 1
+
         # print(self.gradients.shape, end='')
         pass
 
@@ -200,6 +242,10 @@ class Layer(object):
 
         # again, set trainable param
         self.is_trainable = False
+
+        # store the upstream gradient
+        self.upstream_grad = None
+
         pass
 
 
@@ -213,8 +259,15 @@ class Layer(object):
 
 
 
-    def back(self, upstream_grad):
+    def back(self):
 
+        # remember to add all the gradients coming from the next nodes
+        if len(self.next_nodes) != 0:
+            self.upstream_grad = np.zeros(shape=self.next_nodes[0].shape)
+            for node in self.next_nodes:
+                self.upstream_grad = np.add(self.upstream_grad, node.upstream_grad)
+        else:
+            self.upstream_grad = 1
 
         pass
 
@@ -247,10 +300,10 @@ class placeholder(Operation):
 
 
 
-    def back(self, upstream_grad):
-
-        self.gradients = upstream_grad
-        return self.gradients
+    # def back(self, upstream_grad):
+    #
+    #     self.gradients = upstream_grad
+    #     return self.gradients
 
 
 
@@ -282,10 +335,10 @@ class Matrix(Operation):
 
 
 
-    def back(self, upstream_grad):
-
-        self.gradients = upstream_grad
-        return self.gradients
+    # def back(self, upstream_grad):
+    #
+    #     self.gradients = upstream_grad
+    #     return self.gradients
 
 
 
