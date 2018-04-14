@@ -10,8 +10,8 @@ from __future__ import print_function
 from __future__ import division
 from six.moves import xrange
 from graph_and_ops import GRAPH
-from Operations import placeholder, add, relu as relu
-from layers import fully_connected, softmax_classifier
+from Operations import placeholder, add, relu
+from layers import fully_connected, dropout
 from utils import Data
 from loss_functions import Softmax_with_CrossEntropyLoss
 
@@ -59,6 +59,7 @@ def main():
     # this is defined using layers
     layer1 = fully_connected(features=input_features, units=32)
     layer1 = relu(layer1)
+    layer1 = dropout(features=layer1)
     layer2 = fully_connected(features=layer1, units=64)
     layer2 = relu(layer2)
     layer2_1 = fully_connected(features=layer2, units=64)
@@ -104,8 +105,9 @@ def main():
     #     if layer.is_trainable:
     #         all_W.append([layer.W, layer.bias])
 
-    def evaluate(batch_examples, batch_labels):
-        loss_val = graph.run(function=graph.loss, input_matrices={input_features: batch_examples, input_labels: batch_labels})
+    def evaluate(batch_examples, batch_labels, mode='train'):
+        loss_val = graph.run(function=graph.loss, input_matrices={input_features: batch_examples, input_labels: batch_labels},
+                             mode=mode)
         accuracy = 100 / train_batch_size * np.sum(batch_labels == np.argmax(np.exp(logits.output) /
                                                                                     np.sum(np.exp(logits.output),
                                                                                     axis=1)[:, None], axis=1))
@@ -141,7 +143,7 @@ def main():
                 for k in range(steps):
                     eval_indices = range(k*train_batch_size,(k+1)*train_batch_size)
                     eval_batch_loss, eval_batch_accuracy = evaluate(batch_examples=eval_examples[eval_indices,:],
-                                                                    batch_labels=eval_labels[eval_indices])
+                                                                    batch_labels=eval_labels[eval_indices], mode='test')
                     eval_loss += eval_batch_loss
                     eval_accuracy += eval_batch_accuracy
                 print('log: evaluation loss = {}, evaluation accuracy = {}%'.format(eval_loss/steps, eval_accuracy/steps))
@@ -167,14 +169,15 @@ def main():
         x_ = np.linspace(start=-max_val, stop=max_val, num=64)
         # we want to evaluate this thing
         test_set = np.asarray([(x, y) for x in x_ for y in x_], dtype=np.float64)
-        print('log: your test set is {}'.format(test_set.shape))
 
         all_predictions = []
         print('\n---------Testing Now-----------')
+        print('log: your test set is {}'.format(test_set.shape))
         steps = 64 * 64 // train_batch_size
         for k in range(steps):
             test_indices = range(k * train_batch_size, (k + 1) * train_batch_size)
-            test_logits = graph.run(function=logits, input_matrices={input_features: test_set[test_indices, :]})
+            test_logits = graph.run(function=logits, input_matrices={input_features: test_set[test_indices, :]},
+                                    mode='test')
             test_logits -= np.max(test_logits)
             exps = np.exp(test_logits)
             softmaxed = exps / np.sum(exps, axis=1)[:, None]

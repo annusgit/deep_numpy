@@ -29,7 +29,7 @@ class add(Operation):
         pass
 
 
-    def compute(self):
+    def compute(self, **kwargs):
 
         # A and B are two actual matrices that we want to add
         input_matrices = [node.output for node in self.prev_nodes]
@@ -66,7 +66,7 @@ class dot(Operation):
         pass
 
 
-    def compute(self):
+    def compute(self, **kwargs):
 
         # A and B are two actual matrices that we want to add
         input_matrices = [node.output for node in self.prev_nodes]
@@ -107,7 +107,7 @@ class sigmoid(Operation):
         pass
 
 
-    def compute(self):
+    def compute(self, **kwargs):
 
         # A and B are two actual matrices that we want to add
         x = self.prev_nodes[0].output
@@ -143,7 +143,7 @@ class relu(Operation):
         pass
 
 
-    def compute(self):
+    def compute(self, **kwargs):
 
         # we will need this input at backprop
         self.input = self.prev_nodes[0].output
@@ -180,7 +180,7 @@ class softmax_classifier(Operation):
         pass
 
 
-    def compute(self):
+    def compute(self, **kwargs):
 
         # input_matrix is the computation of the last layer before softmax
         # print(len(self.prev_nodes))
@@ -194,7 +194,7 @@ class softmax_classifier(Operation):
         return self.output
 
 
-    def back(self, upstream_grad):
+    def back(self):
         for node in self.next_nodes:
             for n in node.prev_nodes:
                 if type(n).__name__ == 'placeholder':
@@ -204,7 +204,7 @@ class softmax_classifier(Operation):
         # true_labels_matrix = self.next_nodes[0]
 
         softmax = self.output
-        self.gradients = (upstream_grad - np.reshape(np.sum(upstream_grad * softmax, 1),[-1, 1])) * softmax
+        self.gradients = None #(upstream_grad - np.reshape(np.sum(upstream_grad * softmax, 1),[-1, 1])) * softmax
 
         # self.gradients = self.output * true_labels_matrix
         return self.gradients

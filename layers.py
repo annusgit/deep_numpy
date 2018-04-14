@@ -8,7 +8,6 @@
 from __future__ import print_function
 from __future__ import division
 
-import numpy as np
 from Operations import*
 
 
@@ -34,7 +33,7 @@ class fully_connected(Layer):
         self.is_trainable = True
 
 
-    def compute(self):
+    def compute(self, **kwargs):
 
         # just compute the dot and then add the bias
         input_matrix = self.prev_nodes[0].output
@@ -70,6 +69,51 @@ class fully_connected(Layer):
         # print(self.W.shape, self.weight_grad.shape)
         # print(self.bias.shape, self.bias_grad.shape, np.sum(self.upstream, axis=0).shape)
         pass
+
+
+
+# create a dropout layer
+class dropout(Layer):
+    """
+        The dropout layer; will be non-trainable
+    """
+    def __init__(self, features, drop_rate=0.5):
+
+        super(dropout, self).__init__([features])
+
+        # this will be our connection to the network
+        # this is the shape of the matrix that will come at the output!!!
+        self.shape = features.shape
+        # print(features.shape, self.shape)
+        self.drop_rate = drop_rate
+
+        pass
+
+
+    def compute(self, **kwargs):
+
+        # simply come up with a mask and apply it
+        # and it only happens during the training time and at test time, we simply scale the input features by that
+        # probability at test time
+        input_matrix = self.prev_nodes[0].output
+        if kwargs['mode'] == 'train':
+            self.dropout_mask = np.random.randn(*self.shape) > self.drop_rate
+            self.output = np.multiply(input_matrix, self.dropout_mask)
+        # print(input_matrix.shape, self.dropout_mask.shape, self.output.shape)
+        elif kwargs['mode'] == 'test':
+            # print('=================================> testing dropout')
+            self.output = self.drop_rate * input_matrix
+        return self.output
+
+
+    def back(self):
+
+        # get the upstream gradient from the parent method
+        super(dropout, self).back()
+        # print(self.upstream_grad.shape)
+        # this will be the upstream for the previous layer, we multiply with our dropout mask we used earlier
+        self.upstream_grad = np.multiply(self.upstream_grad, self.dropout_mask)
+
 
 
 

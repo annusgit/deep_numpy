@@ -41,7 +41,7 @@ class CrossEntropyLoss(Loss):
         return self.output
 
 
-    def back(self, upstream_grad):
+    def back(self):
 
 
         pass
@@ -61,7 +61,7 @@ class Softmax_with_CrossEntropyLoss(Loss):
         self.shape = (1)
 
 
-    def compute(self):
+    def compute(self, **kwargs):
 
         logits, labels = self.prev_nodes[0].output, self.prev_nodes[1].output
 

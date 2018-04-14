@@ -22,6 +22,7 @@ class GRAPH(object):
         self.operations = []
         self.layers = []
         self.losses = []
+
         pass
 
 
@@ -66,7 +67,7 @@ class GRAPH(object):
                 print('\t {} shape = {}'.format(step, step.shape))
 
 
-    def run(self, function, input_matrices):
+    def run(self, function, input_matrices, mode='train'):
 
         """
             this is our feed forward implementation
@@ -87,7 +88,8 @@ class GRAPH(object):
             forward_order = self.forward_propagation_dict[function]
 
         for step in forward_order:
-            out = step.compute()
+            # mode will be helpful for operations like dropout
+            out = step.compute(mode=mode)
             # print(out.shape)
 
         # return the final output
@@ -185,7 +187,7 @@ class Operation(object):
         pass
 
 
-    def compute(self):
+    def compute(self, **kwargs):
         """
             Forward Prop
             this function is called when we actually want the graph to run
@@ -249,7 +251,7 @@ class Layer(object):
         pass
 
 
-    def compute(self):
+    def compute(self, **kwargs):
         """
             the actual layers will override this method
         :return:
@@ -263,7 +265,7 @@ class Layer(object):
 
         # remember to add all the gradients coming from the next nodes
         if len(self.next_nodes) != 0:
-            self.upstream_grad = np.zeros(shape=self.next_nodes[0].shape)
+            self.upstream_grad = np.zeros(shape=self.output.shape)
             for node in self.next_nodes:
                 self.upstream_grad = np.add(self.upstream_grad, node.upstream_grad)
         else:
@@ -294,7 +296,7 @@ class placeholder(Operation):
         pass
 
 
-    def compute(self):
+    def compute(self, **kwargs):
         # just pass on whatever value you get
         self.output = self.input_
 
@@ -329,7 +331,7 @@ class Matrix(Operation):
         pass
 
 
-    def compute(self):
+    def compute(self, **kwargs):
         # no need to return anything, just assign the value to the output
         self.output = self.matrix
 
