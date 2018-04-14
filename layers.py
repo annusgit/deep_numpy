@@ -50,12 +50,12 @@ class fully_connected(Layer):
 
         # these will be required at weight update
         # print(self.W.shape)
-        self.weight_grad = np.dot(self.prev_nodes[0].output.transpose(), self.upstream_grad)
+        self.weight_grad = np.dot(self.prev_nodes[0].output.transpose(), self.upstream_grad[self])
         # self.bias_grad = np.sum(upstream_grad, axis=0)
-        self.bias_grad = self.upstream_grad
+        self.bias_grad = self.upstream_grad[self]
 
         # this will be the upstream for the previous layer
-        self.upstream_grad = np.dot(self.upstream_grad, self.W.transpose())
+        self.upstream_grad[self.prev_nodes[0]] = np.dot(self.upstream_grad[self], self.W.transpose())
 
 
     def update(self, lr):
@@ -116,7 +116,7 @@ class dropout(Layer):
         super(dropout, self).back()
         # print(self.upstream_grad.shape)
         # this will be the upstream for the previous layer, we multiply with our dropout mask we used earlier
-        self.upstream_grad = np.multiply(self.upstream_grad, self.dropout_mask)
+        self.upstream_grad[self.prev_nodes[0]] = np.multiply(self.upstream_grad[self], self.dropout_mask)
 
 
 

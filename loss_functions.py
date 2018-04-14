@@ -99,7 +99,8 @@ class Softmax_with_CrossEntropyLoss(Loss):
         gradients[range(batch_size), true_labels] -= 1
         gradients /= batch_size
         # print(gradients.shape)
-        self.upstream_grad =  np.multiply(gradients, self.upstream_grad)
+        for prev_node in self.prev_nodes:
+            self.upstream_grad[prev_node] = np.multiply(gradients, self.final_gradient)
 
 
 

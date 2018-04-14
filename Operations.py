@@ -48,6 +48,88 @@ class add(Operation):
         # use parent class method for doing so
         super(add, self).back()
 
+        # this will be the upstream for the previous layers
+        for prev_node in self.prev_nodes:
+            self.upstream_grad[prev_node] = self.upstream_grad[self]
+
+
+
+class negative(Operation):
+
+    """
+        our negative operation
+    """
+
+    def __init__(self, *input_nodes):
+
+        # print('inside init')
+        super(negative, self).__init__(input_nodes)
+
+        # we might need their shapes at some point
+        self.shape = input_nodes[0].shape
+        pass
+
+
+    def compute(self, **kwargs):
+
+        # A and B are two actual matrices that we want to add
+        input_matrix = [node.output for node in self.prev_nodes]
+        # print(input_matrices[0])
+        # print(type(input_matrices[0]), type(input_matrices[1]))
+        self.output = -1*input_matrix
+
+        return self.output
+
+
+    def back(self):
+
+        # multiply the incoming gradients by -1
+
+        # remember to add all the gradients coming from the next nodes
+        # use parent class method for doing so
+        super(negative, self).back()
+
+        self.upstream_grad[self.prev_nodes[0]] = -1 * self.upstream_grad[self]
+
+
+class log(Operation):
+
+    """
+        our add operation; will be treated as another operation
+    """
+
+    def __init__(self, *input_nodes):
+
+        # print('inside init')
+        super(log, self).__init__(input_nodes)
+
+        # we might need their shapes at some point
+        self.shape = input_nodes[0].shape
+        pass
+
+
+    def compute(self, **kwargs):
+
+        # A and B are two actual matrices that we want to add
+        self.input = [node.output for node in self.prev_nodes][0]
+        # print(input_matrices[0])
+        # print(type(input_matrices[0]), type(input_matrices[1]))
+        self.output = np.log(self.input+0.001) # the 0.001 is to avoid log(0)
+
+        return self.output
+
+
+    def back(self):
+
+        # remember to add all the gradients coming from the next nodes
+        # use parent class method for doing so
+        super(log, self).back()
+
+        # so we are doing y = log(x) where x is the input, and we get dL/dy from the upstream
+        # and we need dL/dx = dL/dy * dy/dx, where dy/dx = 1/x
+        self.upstream_grad[self.prev_nodes[0]] = np.multiply(self.upstream_grad[self], 1/self.input)
+
+
 
 class dot(Operation):
 
@@ -69,9 +151,9 @@ class dot(Operation):
     def compute(self, **kwargs):
 
         # A and B are two actual matrices that we want to add
-        input_matrices = [node.output for node in self.prev_nodes]
+        self.input_matrices = [node.output for node in self.prev_nodes]
         # print(type(input_matrices[0]), type(input_matrices[1]))
-        self.output = np.dot(input_matrices[0], input_matrices[1])
+        self.output = np.dot(self.input_matrices[0], self.input_matrices[1])
 
         return self.output
 
@@ -80,14 +162,14 @@ class dot(Operation):
 
         # get the gradients
         super(dot, self).back()
+        [A, B] = self.input_matrices
 
-        # these will be required at weight update
-        self.weight_grad = np.dot(self.upstream_grad.transpose(), self.prev_nodes[0].output)
-        self.bias_grad = np.sum(self.upstream_grad, axis=1)
-
-        # this will be the upstream for the previous layer
-        self.upstream_grad = np.dot(self.upstream_grad, self.prev_nodes[1].output.transpose())
-
+        # this will be the upstream for the previous layer, dL/dA, dL/dB
+        upstream_gradient = self.upstream_grad
+        self.upstream_grad[self.prev_nodes[0]] = np.dot(upstream_gradient[self], B.transpose())
+        self.upstream_grad[self.prev_nodes[1]] = np.dot(A.transpose(), upstream_gradient[self])
+        # self.upstream_grad.append(np.dot(A, self.upstream_grad))
+        # print(self.upstream_grad[0].shape, self.upstream_grad[1].shape)
 
 
 class sigmoid(Operation):
@@ -112,7 +194,7 @@ class sigmoid(Operation):
         # A and B are two actual matrices that we want to add
         x = self.prev_nodes[0].output
         # print(type(input_matrices[0]), type(input_matrices[1]))
-        self.output = 1 / (1 + np.exp(x))
+        self.output = 1 / (1 + np.exp(-x))
 
         return self.output
 
@@ -122,7 +204,7 @@ class sigmoid(Operation):
         super(sigmoid, self).back()
 
         # gradient of sigmoid
-        self.upstream_grad = self.upstream_grad * self.output * (1-self.output)
+        self.upstream_grad[self.prev_nodes[0]] = self.upstream_grad[self] * self.output * (1-self.output)
 
 
 
@@ -161,10 +243,11 @@ class relu(Operation):
         super(relu, self).back()
 
         #print(upstream_grad.shape)
-        self.upstream_grad = np.multiply(self.upstream_grad, self.mask)
+        self.upstream_grad[self.prev_nodes[0]] = np.multiply(self.upstream_grad[self], self.mask)
 
 
 
+# this one is not working at the moment
 class softmax_classifier(Operation):
 
     """

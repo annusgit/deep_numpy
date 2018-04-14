@@ -60,11 +60,11 @@ class GRAPH(object):
             # print(self.operations)
             print('log: a very crude Summary of your graph...')
             for step in self.forward_propagation_dict[self.loss]:
-                print('\t {} shape = {}'.format(step, step.shape))
+                print('\t {} shape = {}'.format(type(step).__name__, step.shape))
 
-            print('log: And this will be the order of backprop...')
-            for step in self.backward_propagation_dict[self.loss]:
-                print('\t {} shape = {}'.format(step, step.shape))
+            # print('log: And this will be the order of backprop...')
+            # for step in self.backward_propagation_dict[self.loss]:
+            #     print('\t {} shape = {}'.format(step, step.shape))
 
 
     def run(self, function, input_matrices, mode='train'):
@@ -129,9 +129,9 @@ class GRAPH(object):
         for node in back_order: # basically go in reverse leaving the last (loss) element
             # if node.is_trainable:
             #     print(node)
-            if not isinstance(node, Matrix) and not isinstance(node, placeholder):
+            # if not isinstance(node, Matrix) and not isinstance(node, placeholder):
                 # print(node)
-                node.back()
+            node.back()
             # print(type(node).__name__, upstream_gradients)
             # if not isinstance(upstream_gradients, int):
                 # print(type(upstream_gradients))
@@ -181,8 +181,8 @@ class Operation(object):
         # this will tell us which ops to train and which not to train
         self.is_trainable = False
 
-        # store the upstream gradient
-        self.upstream_grad = None
+        # store the upstream gradient, in the form of a dictionary, will be very important
+        self.upstream_grad = {}
 
         pass
 
@@ -206,11 +206,11 @@ class Operation(object):
 
         # remember to add all the gradients coming from the next nodes
         if len(self.next_nodes) != 0:
-            self.upstream_grad = np.zeros_like(self.output)
+            self.upstream_grad[self] = np.zeros_like(self.output)
             for node in self.next_nodes:
-                self.upstream_grad = np.add(self.upstream_grad, node.upstream_grad)
+                self.upstream_grad[self] = np.add(self.upstream_grad[self], node.upstream_grad[self])
         else: # then it must be the last node, most probably the lost function itself
-            self.upstream_grad = 1
+            self.final_gradient = 1
 
         # print(self.gradients.shape, end='')
         pass
@@ -246,7 +246,7 @@ class Layer(object):
         self.is_trainable = False
 
         # store the upstream gradient
-        self.upstream_grad = None
+        self.upstream_grad = {}
 
         pass
 
@@ -265,11 +265,11 @@ class Layer(object):
 
         # remember to add all the gradients coming from the next nodes
         if len(self.next_nodes) != 0:
-            self.upstream_grad = np.zeros(shape=self.output.shape)
+            self.upstream_grad[self] = np.zeros_like(self.output)
             for node in self.next_nodes:
-                self.upstream_grad = np.add(self.upstream_grad, node.upstream_grad)
-        else:
-            self.upstream_grad = 1
+                self.upstream_grad[self] = np.add(self.upstream_grad[self], node.upstream_grad[self])
+        else: # then it must be the last node, most probably the lost function itself
+            self.final_gradient = 1
 
         pass
 
@@ -301,12 +301,10 @@ class placeholder(Operation):
         self.output = self.input_
 
 
+    # we don't need this
+    def back(self):
 
-    # def back(self, upstream_grad):
-    #
-    #     self.gradients = upstream_grad
-    #     return self.gradients
-
+        pass
 
 
 class Matrix(Operation):
@@ -334,6 +332,22 @@ class Matrix(Operation):
     def compute(self, **kwargs):
         # no need to return anything, just assign the value to the output
         self.output = self.matrix
+
+
+    def update(self, lr):
+
+        super(Matrix, self).back()
+
+        # look for the biases vs. weights issue
+        try:
+            self.matrix += -lr * self.upstream_grad[self]
+        except ValueError:
+            try:
+                self.matrix += -lr * np.sum(self.upstream_grad[self], axis=0)
+            except ValueError:
+                print('it\'s not working!!!')
+                pass
+        pass
 
 
 

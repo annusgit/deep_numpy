@@ -16,7 +16,7 @@ def main():
     manager = Data()
     num_examples = 10**4
     max_val = 1
-    train_batch_size = 64
+    train_batch_size = 16
     train_size = int(num_examples/2)
     eval_size = int(num_examples/2)
     X, y = manager.create_data_set(num_of_examples=num_examples,
@@ -52,44 +52,47 @@ def main():
 
     # declare all the weights and biases
     weights1 = Matrix(initial_value=np.random.uniform(low=-0.1,high=0.1,size=(2,32)))
-    bias1 = Matrix(initial_value=np.ones(shape=32))
+    bias1 = Matrix(initial_value=np.ones(shape=(train_batch_size, 32)))
 
     weights2 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(32, 64)))
-    bias2 = Matrix(initial_value=np.ones(shape=64))
+    bias2 = Matrix(initial_value=np.ones(shape=(train_batch_size, 64)))
 
-    weights3 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(64, 128)))
-    bias3 = Matrix(initial_value=np.ones(shape=128))
+    weights3 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(64, 2)))
+    bias3 = Matrix(initial_value=np.ones(shape=(train_batch_size, 2)))
 
     weights4 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(128, 64)))
-    bias4 = Matrix(initial_value=np.ones(shape=64))
+    bias4 = Matrix(initial_value=np.ones(shape=(train_batch_size, 64)))
 
     weights5 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(64, 32)))
-    bias5 = Matrix(initial_value=np.ones(shape=32))
+    bias5 = Matrix(initial_value=np.ones(shape=(train_batch_size, 32)))
 
     weights6 = Matrix(initial_value=np.random.uniform(low=-0.1,high=0.1,size=(32,2)))
-    bias6 = Matrix(initial_value=np.ones(shape=2))
+    bias6 = Matrix(initial_value=np.ones(shape=(train_batch_size, 2)))
 
     # calculate some features
-    features = add(dot(input_features,weights1),bias1)
+    features = add(dot(input_features, weights1),bias1)
     features = relu(features)
     features = add(dot(features, weights2), bias2)
     features = relu(features)
-    features = add(dot(features, weights3), bias3)
-    features = relu(features)
-    features = add(dot(features, weights4), bias4)
-    features = relu(features)
-    features = add(dot(features, weights5), bias5)
-    features = relu(features)
-    logits = add(dot(features, weights6), bias6)
+    logits = add(dot(features, weights3), bias3)
+    # logits = relu(features)
+    # features = add(dot(features, weights4), bias4)
+    # features = relu(features)
+    # features = add(dot(features, weights5), bias5)
+    # features = relu(features)
+    # logits = add(dot(features, weights6), bias6)
 
     loss = Softmax_with_CrossEntropyLoss(logits=logits, labels=input_labels)
 
     graph.graph_compile(function=loss, verbose=True)
-    loss_value = graph.run(input_matrices={input_features: train_batch_examples, input_labels: train_batch_labels})
-    print(loss_value)
+    for i in range(10000):
+        loss_value = graph.run(function=loss, input_matrices={input_features: train_batch_examples,
+                                                              input_labels: train_batch_labels})
+        print(loss_value)
 
-    # calculate all the gradients in the network due to bad predictions
-    graph.gradients()
+        # calculate all the gradients in the network due to bad predictions
+        graph.gradients(function=loss)
+        graph.update(learn_rate=3e-3)
 
     pass
 

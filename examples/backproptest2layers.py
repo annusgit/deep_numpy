@@ -29,8 +29,9 @@ def main():
     train_batch_size = 32
     train_size = int(num_examples/2)
     eval_size = int(num_examples/2)
+    # discriminator = (1/(1+np.exp(-x)+1/(1+np.exp(x))))
     X, y = manager.create_data_set(num_of_examples=num_examples, max_val=max_val,
-                                   discriminator=lambda x: max_val*(1/(1+np.exp(-x)+np.exp((-x))))-max_val/2,
+                                   discriminator=lambda x: max_val*(np.cos(np.sin(x**2)))-max_val/2,
                                    one_hot=False, plot_data=True, load_saved_data=False,
                                    filename='dataset.npy')
 
@@ -61,7 +62,7 @@ def main():
     layer1 = relu(layer1)
     layer2 = fully_connected(features=layer1, units=64)
     layer2 = relu(layer2)
-    layer2 = dropout(features=layer2, drop_rate=0.2)
+    # layer2 = dropout(features=layer2, drop_rate=0.5)
     layer2_1 = fully_connected(features=layer2, units=64)
     layer2_1 = relu(layer2_1)
     layer2_2 = fully_connected(features=layer2_1, units=64)
@@ -93,7 +94,7 @@ def main():
 
     layer7 = fully_connected(features=layer6_2, units=32)
     layer7 = relu(layer7)
-    # layer7 = dropout(features=layer7, drop_rate=0.2)
+    # layer7 = dropout(features=layer7, drop_rate=0.5)
     logits = fully_connected(features=layer7, units=2)
     loss = Softmax_with_CrossEntropyLoss(logits=logits, labels=input_labels)
 
