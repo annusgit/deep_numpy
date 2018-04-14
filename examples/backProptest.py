@@ -57,8 +57,8 @@ def main():
     weights2 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(32, 64)))
     bias2 = Matrix(initial_value=np.ones(shape=(train_batch_size, 64)))
 
-    weights3 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(64, 2)))
-    bias3 = Matrix(initial_value=np.ones(shape=(train_batch_size, 2)))
+    weights3 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(64, 128)))
+    bias3 = Matrix(initial_value=np.ones(shape=(train_batch_size, 128)))
 
     weights4 = Matrix(initial_value=np.random.uniform(low=-0.1, high=0.1, size=(128, 64)))
     bias4 = Matrix(initial_value=np.ones(shape=(train_batch_size, 64)))
@@ -74,21 +74,22 @@ def main():
     features = relu(features)
     features = add(dot(features, weights2), bias2)
     features = relu(features)
-    logits = add(dot(features, weights3), bias3)
-    # logits = relu(features)
-    # features = add(dot(features, weights4), bias4)
-    # features = relu(features)
-    # features = add(dot(features, weights5), bias5)
-    # features = relu(features)
-    # logits = add(dot(features, weights6), bias6)
+    features = add(dot(features, weights3), bias3)
+    features = relu(features)
+    features = add(dot(features, weights4), bias4)
+    features = relu(features)
+    features = add(dot(features, weights5), bias5)
+    features = relu(features)
+    logits = add(dot(features, weights6), bias6)
 
     loss = Softmax_with_CrossEntropyLoss(logits=logits, labels=input_labels)
 
     graph.graph_compile(function=loss, verbose=True)
-    for i in range(10000):
+    for i in range(100000):
         loss_value = graph.run(function=loss, input_matrices={input_features: train_batch_examples,
                                                               input_labels: train_batch_labels})
-        print(loss_value)
+        if i % 1000 == 0:
+            print('iteration {}, batch loss_val = {}'.format(i, loss_value))
 
         # calculate all the gradients in the network due to bad predictions
         graph.gradients(function=loss)
