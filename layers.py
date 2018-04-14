@@ -97,13 +97,16 @@ class dropout(Layer):
         # probability at test time
         input_matrix = self.prev_nodes[0].output
         if kwargs['mode'] == 'train':
-            self.dropout_mask = np.random.randn(*self.shape) < self.drop_rate
+            # we shall use 'inverted dropout', so we scale by the keep_rate = 1 - drop_rate
+            self.dropout_mask = (np.random.randn(*self.shape) > self.drop_rate) / (1-self.drop_rate)
+            # print(np.count_nonzero(self.dropout_mask)/(self.shape[0]*self.shape[1]))
             # print(self.dropout_mask)
             self.output = np.multiply(input_matrix, self.dropout_mask)
         # print(input_matrix.shape, self.dropout_mask.shape, self.output.shape)
         elif kwargs['mode'] == 'test':
             # print('=================================> testing dropout')
-            self.output = self.drop_rate * input_matrix
+            # since we are using inverted dropout we don't need to do anything at test time
+            self.output = input_matrix
         return self.output
 
 
