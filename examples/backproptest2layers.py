@@ -59,7 +59,7 @@ def main():
     # this is defined using layers
     layer1 = fully_connected(features=input_features, units=32)
     layer1 = relu(layer1)
-    layer1 = dropout(features=layer1)
+    layer1 = dropout(features=layer1, drop_rate=0.2)
     layer2 = fully_connected(features=layer1, units=64)
     layer2 = relu(layer2)
     layer2_1 = fully_connected(features=layer2, units=64)

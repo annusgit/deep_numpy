@@ -97,7 +97,8 @@ class dropout(Layer):
         # probability at test time
         input_matrix = self.prev_nodes[0].output
         if kwargs['mode'] == 'train':
-            self.dropout_mask = np.random.randn(*self.shape) > self.drop_rate
+            self.dropout_mask = np.random.randn(*self.shape) < self.drop_rate
+            # print(self.dropout_mask)
             self.output = np.multiply(input_matrix, self.dropout_mask)
         # print(input_matrix.shape, self.dropout_mask.shape, self.output.shape)
         elif kwargs['mode'] == 'test':
